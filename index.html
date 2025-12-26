@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bot Project Drag & Drop Smooth</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Quicksand:wght@600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Poppins', 'Quicksand', sans-serif;
+      background-color: #e6ebf5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .chat-container {
+      position: relative;
+      width: 392px;
+      height: 732px;
+      border-radius: 0px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background-color: #0089ec;
+      background-image:
+        linear-gradient(0deg, rgba(255,255,255,0.15) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px);
+      background-size: 16.75px 16.75px;
+      background-position: 0 0;
+      margin: 0 auto;
+    }
+    /* Верхняя панель */
+    .top-panel {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background-color: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(6px);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      height: 50px;
+    }
+    /* Кнопки верхней панели */
+    .top-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      user-select: none;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      transition: background-color 0.2s ease;
+    }
+    .top-button:hover {
+      background-color: rgba(0, 137, 236, 0.1);
+    }
+    /* Иконки верхней панели */
+    .top-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .top-icon svg {
+      width: var(--icon-size, 24px);
+      height: var(--icon-size, 24px);
+      display: block;
+      stroke: #888;
+      stroke-width: var(--stroke-width, 2);
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    /* Центр верхней панели */
+    .top-center {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    /* Нижняя панель */
+    .bottom-nav {
+      height: 69px;
+      width: 100%;
+      background: #fff;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      z-index: 20;
+      padding: 0 16px;
+    }
+    /* Контейнеры меню */
+    .menu-container {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      gap: 8px;
+    }
+    .main-menu-container {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .submenu-container {
+      position: absolute;
+      top: 0;
+      left: 16px;
+      right: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px);
+    }
+    .submenu-container.active {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0);
+    }
+    /* Контейнер для третьего уровня меню */
+    .third-level-container {
+      position: absolute;
+      top: 0;
+      left: 16px;
+      right: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px);
+    }
+    .third-level-container.active {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0);
+    }
+    /* Элементы навигации */
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      color: #888;
+      font-size: 11px;
+      font-weight: 500;
+      height: 100%;
+      flex: 1;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: none;
+      background: none;
+      min-width: 0;
+      padding: 8px 4px;
+      border-radius: 8px;
+    }
+    .nav-item:hover {
+      background-color: rgba(0, 123, 255, 0.05);
+    }
+    .nav-item.active {
+      color: #007bff;
+    }
+    .nav-item.active .nav-icon {
+      transform: translateY(-2px);
+    }
+    /* Иконки навигации - УВЕЛИЧЕНЫ ДЛЯ ТРЕТЬЕГО УРОВНЯ */
+    .nav-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      margin-bottom: 0;
+      transition: transform 0.2s ease;
+    }
+    .nav-icon svg {
+      width: var(--icon-size, 24px);
+      height: var(--icon-size, 24px);
+      color: currentColor;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: var(--stroke-width, 1.5);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    /* Контентная область */
+    .content-area {
+      flex: 1;
+      padding: 80px 20px 100px 20px;
+      overflow-y: auto;
+    }
+    /* Анимации */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .fade-in-up {
+      animation: fadeInUp 0.5s ease forwards;
+    }
+
+    /* Новые стили для выравнивания текста и иконок */
+    .nav-item span {
+      margin-top: 4px;
+      line-height: 1;
+      height: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Основное меню - центрирование */
+    .main-menu-container .nav-item {
+      padding: 12px 4px;
+    }
+
+    /* Подменю - центрирование */
+    .submenu-container .nav-item,
+    .third-level-container .nav-item {
+      padding: 8px 2px; /* Уменьшен padding для компенсации увеличенных иконок */
+    }
+
+    /* Убедимся, что все контейнеры имеют одинаковую высоту */
+    .menu-container {
+      align-items: stretch;
+    }
+
+    /* Выравнивание всех иконок по вертикали */
+    .nav-icon {
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Специальные стили для третьего уровня - увеличенные иконки */
+    .third-level-container .nav-icon {
+      width: 44px; /* Еще больше для третьего уровня */
+      height: 44px;
+    }
+
+    .third-level-container .nav-item span {
+      font-size: 10px; /* Чуть меньше шрифт для компенсации */
+      margin-top: 2px;
+    }
+
+    /* Стиль для текстовых иконок */
+    .text-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px; /* Такой же размер как у всех в третьем уровне */
+      height: 44px; /* Такой же размер как у всех в третьем уровне */
+    }
+
+    .text-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .text-icon text {
+      fill: currentColor;
+      stroke: none;
+      font-family: 'Poppins', Arial, sans-serif;
+      font-weight: 600;
+    }
+
+    /* Стили для темы */
+    body.dark-theme {
+      background-color: #121212;
+    }
+
+    body.dark-theme .chat-container {
+      background-color: #1a1a1a;
+      background-image:
+        linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+    }
+
+    body.dark-theme .top-panel {
+      background-color: rgba(30, 30, 30, 0.95);
+    }
+
+    body.dark-theme .bottom-nav {
+      background: #2d2d2d;
+    }
+
+    body.dark-theme .nav-item {
+      color: #aaa;
+    }
+
+    body.dark-theme .nav-item.active {
+      color: #4dabf7;
+    }
+
+    /* Анимация переключения иконок */
+    .theme-toggle-icon .nav-icon {
+      transition: transform 0.3s ease;
+    }
+
+    .theme-toggle-icon:hover .nav-icon {
+      transform: rotate(30deg);
+    }
+
+    /* Плавная анимация смены иконок */
+    .theme-icon-transition {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Быстрая плавная анимация для изменения stroke-width */
+    .nav-icon svg path {
+      transition: stroke 0.3s ease, stroke-width 0.3s ease;
+    }
+
+    /* Убираем задержки анимации для элементов навигации */
+    .nav-item {
+      animation: none !important;
+    }
+
+    /* === Редактор UX === */
+    .editor {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+    .editor .canvas {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      cursor: grab;
+      position: relative;
+      background-color: #0089ec;
+    }
+    body.dark-theme .editor .canvas {
+      background-color: #1a1a1a;
+    }
+    .dots {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1250px;
+      height: 1250px;
+      background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.6) 1px, transparent 0);
+      opacity: 0.7;
+    }
+    body.dark-theme .dots {
+      background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0);
+      opacity: 0.8;
+    }
+    .block {
+      position: absolute;
+      pointer-events: auto;
+      cursor: move;
+      z-index: 20;
+      animation: fadeInUp 0.5s ease forwards;
+      transform-origin: center;
+    }
+    .block svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .block text {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 28px;
+      fill: #333;
+    }
+    body.dark-theme .block text {
+      fill: #e0e0e0;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <!-- Верхняя панель -->
+    <div class="top-panel" id="topPanel">
+      <!-- Иконка 1 -->
+      <div class="top-button" draggable="true" style="--icon-size: 24px; --stroke-width: 1.8;">
+        <div class="top-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M12 15v3.586a1 1 0 0 1 -1.707 .707l-6.586 -6.586a1 1 0 0 1 0 -1.414l6.586 -6.586a1 1 0 0 1 1.707 .707v3.586h3v6h-3z" />
+            <path d="M21 15v-6" />
+            <path d="M18 15v-6" />
+          </svg>
+        </div>
+      </div>
+      <!-- Центр: 2 и 3 -->
+      <div class="top-center">
+        <!-- Иконка 2 -->
+        <div class="top-button" draggable="true" style="--icon-size: 24px; --stroke-width: 1.8;">
+          <div class="top-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M20 15h-8v3.586a1 1 0 0 1 -1.707 .707l-6.586 -6.586a1 1 0 0 1 0 -1.414l6.586 -6.586a1 1 0 0 1 1.707 .707v3.586h8a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1z" />
+            </svg>
+          </div>
+        </div>
+        <!-- Иконка 3 -->
+        <div class="top-button" draggable="true" style="--icon-size: 24px; --stroke-width: 1.8;">
+          <div class="top-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M4 9h8v-3.586a1 1 0 0 1 1.707 -.707l6.586 6.586a1 1 0 0 1 0 1.414l-6.586 6.586a1 1 0 0 1 -1.707 -.707v-3.586h-8a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <!-- Иконка 4 -->
+      <div class="top-button" draggable="true" style="--icon-size: 24px; --stroke-width: 1.8;">
+        <div class="top-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M19 18a3.5 3.5 0 0 0 0 -7h-1a5 4.5 0 0 0 -11 -2a4.6 4.4 0 0 0 -2.1 8.4" />
+            <path d="M12 13l0 9" />
+            <path d="M9 19l3 3l3 -3" />
+          </svg>
+        </div>
+      </div>
+    </div>
+    <!-- Контентная область -->
+    <div class="content-area" id="contentArea">
+      <!-- Контент будет добавляться динамически -->
+    </div>
+    <!-- Нижняя панель -->
+    <nav class="bottom-nav" id="bottomNav">
+      <!-- Основное меню -->
+      <div class="menu-container main-menu-container" id="mainMenuContainer">
+        <!-- UX -->
+        <button class="nav-item main-menu active" data-category="ux" style="--icon-size: 28px; --stroke-width: 1.2;">
+          <div class="nav-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M12 3l8 4.5l0 9l-8 4.5l-8 -4.5l0 -9l8 -4.5" />
+              <path d="M12 12l8 -4.5" />
+              <path d="M12 12l0 9" />
+              <path d="M12 12l-8 -4.5" />
+            </svg>
+          </div>
+          <span>UX</span>
+        </button>
+        <!-- UI -->
+        <button class="nav-item main-menu" data-category="ui" style="--icon-size: 26px; --stroke-width: 1.2;">
+          <div class="nav-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M3 21v-4a4 4 0 1 1 4 4h-4" />
+              <path d="M21 3a16 16 0 0 0 -12.8 10.2" />
+              <path d="M21 3a16 16 0 0 1 -10.2 12.8" />
+              <path d="M10.6 9a9 9 0 0 1 4.4 4.4" />
+            </svg>
+          </div>
+          <span>UI</span>
+        </button>
+        <!-- Frontend -->
+        <button class="nav-item main-menu" data-category="frontend" style="--icon-size: 26px; --stroke-width: 1.2;">
+          <div class="nav-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M3 21h4l13 -13a1.5 1.5 0 0 0 -4 -4l-13 13v4" />
+              <path d="M14.5 5.5l4 4" />
+              <path d="M12 8l-5 -5l-4 4l5 5" />
+              <path d="M7 8l-1.5 1.5" />
+              <path d="M16 12l5 5l-4 4l-5 -5" />
+              <path d="M16 17l-1.5 1.5" />
+            </svg>
+          </div>
+          <span>Frontend</span>
+        </button>
+        <!-- Backend -->
+        <button class="nav-item main-menu" data-category="backend" style="--icon-size: 26px; --stroke-width: 1.2;">
+          <div class="nav-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M7 10h3v-3l-3.5 -3.5a6 6 0 0 1 8 8l6 6a2 2 0 0 1 -3 3l-6 -6a6 6 0 0 1 -8 -8l3.5 3.5" />
+            </svg>
+          </div>
+          <span>Backend</span>
+        </button>
+        <!-- Settings -->
+        <button class="nav-item main-menu" data-category="settings" style="--icon-size: 26px; --stroke-width: 1.2;">
+          <div class="nav-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" />
+              <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+            </svg>
+          </div>
+          <span>Settings</span>
+        </button>
+      </div>
+      <!-- Контейнер для подкатегорий -->
+      <div class="menu-container submenu-container" id="submenuContainer"></div>
+      <!-- Контейнер для третьего уровня (фигуры) -->
+      <div class="menu-container third-level-container" id="thirdLevelContainer"></div>
+    </nav>
+  </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const mainMenuContainer = document.getElementById("mainMenuContainer");
+      const submenuContainer = document.getElementById("submenuContainer");
+      const thirdLevelContainer = document.getElementById("thirdLevelContainer");
+      const contentArea = document.getElementById("contentArea");
+
+      let currentCategory = null;
+      let currentSubcategory = null;
+      let isDarkTheme = false;
+      let editor = null;
+
+      // Обновленные данные для подкатегорий с добавленными элементами
+      const categoryData = {
+        "ux": {
+          items: [
+            {
+              name: "Условия",
+              icon: "M3 5m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z M6 8h.01 M9 8h.01",
+              thirdLevel: {
+                name: "Логические операторы",
+                items: [
+                  {
+                    name: "Если",
+                    svg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="10" y="10" width="80" height="80" rx="15" fill="none" stroke="currentColor" stroke-width="4"/>
+                      <text x="50" y="60" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="28" font-weight="600" fill="currentColor">if</text>
+                    </svg>`
+                  },
+                  {
+                    name: "Иначе если",
+                    svg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                      <ellipse cx="50" cy="50" rx="40" ry="35" fill="none" stroke="currentColor" stroke-width="4"/>
+                      <text x="50" y="58" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="28" font-weight="600" fill="currentColor">elif</text>
+                    </svg>`
+                  },
+                  {
+                    name: "Иначе",
+                    svg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="4"/>
+                      <text x="50" y="60" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="28" font-weight="600" fill="currentColor">else</text>
+                    </svg>`
+                  },
+                  {
+                    name: "Нет",
+                    svg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                      <polygon points="35,10 65,10 90,35 90,65 65,90 35,90 10,65 10,35" fill="none" stroke="currentColor" stroke-width="4"/>
+                      <text x="50" y="60" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="28" font-weight="600" fill="currentColor">not</text>
+                    </svg>`
+                  },
+                  {
+                    name: "И",
+                    svg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="10" y="20" width="80" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="4"/>
+                      <text x="50" y="60" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="28" font-weight="600" fill="currentColor">and</text>
+                    </svg>`
+                  },
+                  {
+                    name: "Или",
+                    svg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                      <polygon points="50,10 90,38 75,90 25,90 10,38" fill="none" stroke="currentColor" stroke-width="4"/>
+                      <text x="50" y="62" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="28" font-weight="600" fill="currentColor">or</text>
+                    </svg>`
+                  },
+                  {
+                    name: "Состояние",
+                    svg: `<svg viewBox="-0.4 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                      <g transform="translate(-8, -5)">
+                        <rect x="9" y="25" width="97" height="60" rx="30" ry="30" fill="none" stroke="currentColor" stroke-width="4"/>
+                      </g>
+                      <text x="50" y="51" text-anchor="middle" font-family="Poppins" font-size="27" font-weight="bold" fill="currentColor" dominant-baseline="middle">toggle</text>
+                    </svg>`
+                  },
+                  {
+                    name: "Цикл",
+                    svg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                      <g transform="translate(-5, -5)">
+                        <polygon points="30,16 80,16 95,32 95,78 80,94 30,94 15,78 15,32" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+                      </g>
+                      <text x="50" y="50" text-anchor="middle" font-family="Poppins" font-size="28" font-weight="bold" fill="currentColor" dominant-baseline="middle">loop</text>
+                    </svg>`
+                  },
+                  {
+                    name: "Истина",
+                    svg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                      <g transform="translate(-5, -5)">
+                        <polygon points="30,20 80,20 95,35 95,75 80,90 30,90 15,75 15,35" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+                      </g>
+                      <text x="50" y="50" text-anchor="middle" font-family="Poppins" font-size="28" font-weight="bold" fill="currentColor" dominant-baseline="middle">true</text>
+                    </svg>`
+                  },
+                  {
+                    name: "Ложь",
+                    svg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                      <g transform="translate(0, -5)">
+                        <polygon points="15,30 85,30 95,40 95,70 85,80 15,80 5,70 5,40" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+                      </g>
+                      <text x="50" y="50" text-anchor="middle" font-family="Poppins" font-size="28" font-weight="bold" fill="currentColor" dominant-baseline="middle">false</text>
+                    </svg>`
+                  },
+                  {
+                    name: "Пусто",
+                    svg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                      <g transform="translate(0,0) scale(4.1)">
+                        <path d="M19.875 6.27a2.225 2.225 0 0 1 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+                      </g>
+                      <text x="49.3" y="50" text-anchor="middle" font-family="Poppins" font-size="27" font-weight="bold" fill="currentColor" dominant-baseline="middle">none</text>
+                    </svg>`
+                  },
+                  {
+                    name: "Функция",
+                    svg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                      <g transform="translate(-5, -7)">
+                        <path d="M62 15l35 35a10 10 0 0 1 0 14l-35 35a10 10 0 0 1 -14 0l-35 -35a10 10 0 0 1 0 -14l35 -35a10 10 0 0 1 14 0z" fill="none" stroke="currentColor" stroke-width="4"/>
+                      </g>
+                      <text x="51" y="50" text-anchor="middle" font-family="Poppins" font-size="28" font-weight="bold" fill="currentColor" dominant-baseline="middle">def</text>
+                    </svg>`
+                  }
+                ]
+              }
+            },
+            {
+              name: "Проверка",
+              icon: "M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0 M21 21l-6 -6",
+              thirdLevel: {
+                name: "Элементы проверки",
+                items: [
+                  {
+                    name: "Валидация",
+                    icon: "M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M9 12l2 2l4 -4"
+                  },
+                  {
+                    name: "Ошибки",
+                    icon: "M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M12 8v4 M12 16v.01"
+                  },
+                  {
+                    name: "Предупреждения",
+                    icon: "M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M12 8v4 M12 16v.01"
+                  },
+                  {
+                    name: "Успех",
+                    icon: "M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M9 12l2 2l4 -4"
+                  },
+                  {
+                    name: "Информация",
+                    icon: "M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M12 8v4 M12 16v.01"
+                  }
+                ]
+              }
+            },
+            {
+              name: "Сценарии кнопок",
+              icon: "M9.225 18.412a1.595 1.595 0 0 1 -1.225 .588c-.468 0 -.914 -.214 -1.225 -.588l-4.361 -5.248a1.844 1.844 0 0 1 0 -2.328l4.361 -5.248a1.595 1.595 0 0 1 1.225 -.588c.468 0 .914 .214 1.225 .588l4.361 5.248a1.844 1.844 0 0 1 0 2.328l-4.361 5.248z M17 5l4.586 5.836a1.844 1.844 0 0 1 0 2.328l-4.586 5.836 M13 5l4.586 5.836a1.844 1.844 0 0 1 0 2.328l-4.586 5.836",
+              thirdLevel: {
+                name: "Сценарии кнопок",
+                items: [
+                  {
+                    name: "Основные",
+                    icon: "M9 12h6 M12 9v6 M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14z"
+                  },
+                  {
+                    name: "Вторичные",
+                    icon: "M9 12h6 M12 9v6 M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14z"
+                  },
+                  {
+                    name: "Активные",
+                    icon: "M9 12h6 M12 9v6 M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14z"
+                  },
+                  {
+                    name: "Неактивные",
+                    icon: "M9 12h6 M12 9v6 M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14z"
+                  },
+                  {
+                    name: "Опасные",
+                    icon: "M9 12h6 M12 9v6 M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14z"
+                  }
+                ]
+              }
+            },
+            {
+              name: "Сценарии страниц",
+              icon: "M5 3m0 2a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2z M9 7l6 0 M9 11l6 0 M9 15l4 0",
+              thirdLevel: {
+                name: "Сценарии страниц",
+                items: [
+                  {
+                    name: "Главная",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "Каталог",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "Профиль",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "Корзина",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "Оформление",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  }
+                ]
+              }
+            },
+            {
+              name: "Резервные сценарии",
+              icon: "M3 20l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c3.255 2.777 3.695 7.266 1.029 10.501c-2.666 3.235 -7.615 4.215 -11.574 2.293l-4.7 1",
+              thirdLevel: {
+                name: "Резервные сценарии",
+                items: [
+                  {
+                    name: "404",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "Ошибка",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "Тех. работы",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "Обслуживание",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "Оффлайн",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "ui": {
+          items: [
+            {
+              name: "Кнопки",
+              icon: "M9 12h6 M12 9v6 M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14z",
+              thirdLevel: {
+                name: "Фигуры",
+                items: [
+                  {
+                    name: "Квадрат",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"
+                  },
+                  {
+                    name: "Круг",
+                    icon: "M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"
+                  },
+                  {
+                    name: "Треугольник",
+                    icon: "M3 19h18l-9 -15z"
+                  },
+                  {
+                    name: "Овал",
+                    icon: "M3 12c0 -3.314 4.03 -6 9 -6s9 2.686 9 6s-4.03 6 -9 6s-9 -2.686 -9 -6z"
+                  },
+                  {
+                    name: "Пятиугольник",
+                    icon: "M13.163 2.168l8.021 5.828c.694 .504 .984 1.397 .719 2.212l-3.064 9.43a1.978 1.978 0 0 1 -1.881 1.367h-9.916a1.978 1.978 0 0 1 -1.881 -1.367l-3.064 -9.43a1.978 1.978 0 0 1 .719 -2.212l8.021 -5.828a1.978 1.978 0 0 1 2.326 0z"
+                  }
+                ]
+              }
+            },
+            {
+              name: "Текстовые элементы",
+              icon: "M4 5m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z M14 7h6 M14 11h6 M4 15h16 M4 19h16",
+              thirdLevel: {
+                name: "Текстовые элементы",
+                items: [
+                  {
+                    name: "Шрифт",
+                    icon: "M17.5 15.5m-3.5 0a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0 -7 0 M3 19v-10.5a3.5 3.5 0 0 1 7 0v10.5 M3 13h7 M21 12v7"
+                  },
+                  {
+                    name: "Абзацы",
+                    icon: "M20 6l-11 0 M20 12l-7 0 M20 18l-11 0 M4 8l4 4l-4 4"
+                  },
+                  {
+                    name: "Гиперссылки",
+                    icon: "M9 15l6 -6 M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464 M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463"
+                  },
+                  {
+                    name: "Подписи",
+                    icon: "M3 19c3.333 -2 5 -4 5 -6c0 -3 -1 -3 -2 -3s-2.032 1.085 -2 3c.034 2.048 1.658 2.877 2.5 4c1.5 2 2.5 2.5 3.5 1c.667 -1 1.167 -1.833 1.5 -2.5c1 2.333 2.333 3.5 4 3.5h2.5 M20 17v-12c0 -1.121 -.879 -2 -2 -2s-2 .879 -2 2v12l2 2l2 -2z M16 7h4"
+                  },
+                  {
+                    name: "Подсказки",
+                    icon: "M13 20l7 -7 M13 20v-6a1 1 0 0 1 1 -1h6v-7a2 2 0 0 0 -2 -2h-12a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7"
+                  }
+                ]
+              }
+            },
+            {
+              name: "Медиа",
+              icon: "M15 8h.01 M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12z M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5 M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3",
+              thirdLevel: {
+                name: "Медиа элементы",
+                items: [
+                  {
+                    name: "Изображение",
+                    icon: "M15 8h.01 M12.5 21h-6.5a3 3 0 0 1 -3 -3v-12a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v6.5 M3 16l5 -5c.928 -.893 2.072 -.893 3 0l4 4 M14 14l1 -1c.67 -.644 1.45 -.824 2.182 -.540 M16 19h6 M19 16v6 M9 13a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"
+                  },
+                  {
+                    name: "Видео",
+                    icon: "M12 20h-7a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2h1a2 2 0 0 0 2 -2a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v3.5 M16 19h6 M19 16v6 M9 13a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"
+                  },
+                  {
+                    name: "Иконки",
+                    icon: "M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2"
+                  },
+                  {
+                    name: "Фоновые элементы",
+                    icon: "M4 8l4 -4 M14 4l-10 10 M4 20l16 -16 M20 10l-10 10 M16 18h6 M19 15v6"
+                  },
+                  {
+                    name: "Галерея",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 4v7l2 -2l2 2v-7"
+                  }
+                ]
+              }
+            },
+            {
+              name: "Декор",
+              icon: "M6 3l-3 3 M21 18l-3 3 M11 3l-8 8 M16 3l-13 13 M21 3l-18 18 M21 8l-13 13 M21 13l-8 8",
+              thirdLevel: {
+                name: "Эффекты декора",
+                items: [
+                  {
+                    name: "Тень",
+                    icon: "M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M13 12h5 M13 15h4 M13 18h1 M13 9h4 M13 6h1"
+                  },
+                  {
+                    name: "Цвета",
+                    icon: "M13.58 13.79c.27 .68 .42 1.43 .42 2.21c0 1.77 -.77 3.37 -2 4.46a5.93 5.93 0 0 1 -4 1.54c-3.31 0 -6 -2.69 -6 -6c0 -2.76 1.88 -5.1 4.42 -5.79 M17.58 10.21c2.54 .69 4.42 3.03 4.42 5.79c0 3.31 -2.69 6 -6 6a5.93 5.93 0 0 1 -4 -1.54 M12 8m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0"
+                  },
+                  {
+                    name: "Рамки",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8l0 .01 M8 12l0 .01 M12 12l0 .01 M16 12l0 .01 M12 16l0 .01"
+                  },
+                  {
+                    name: "Скрепления",
+                    icon: "M4 20c0 -6.559 0 -9.838 1.628 -12.162a9 9 0 0 1 2.21 -2.21c2.324 -1.628 5.602 -1.628 12.162 -1.628"
+                  },
+                  {
+                    name: "Анимация",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M8 4l0 16 M16 4l0 16 M4 8l4 0 M4 16l4 0 M4 12l16 0 M16 8l4 0 M16 16l4 0"
+                  }
+                ]
+              }
+            },
+            {
+              name: "Навигационные элементы",
+              icon: "M7 19a2 2 0 1 0 -4 0a2 2 0 0 0 4 0z M5 17v-9.5a3.5 3.5 0 0 1 7 0v9a3.5 3.5 0 0 0 7 0v-13.5 M16 6l3 -3l3 3",
+              thirdLevel: {
+                name: "Элементы навигации",
+                items: [
+                  {
+                    name: "Меню",
+                    icon: "M20 6v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2z M20 15h-16 M14 10l-2 -2l-2 2"
+                  },
+                  {
+                    name: "Подменю",
+                    icon: "M4 18v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 9h16 M10 14l2 2l2 -2"
+                  },
+                  {
+                    name: "Хлебные крошки",
+                    icon: "M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z M14 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z M14 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
+                  },
+                  {
+                    name: "Путь",
+                    icon: "M4.698 4.034l16.302 7.966l-16.302 7.966a.503 .503 0 0 1 -.546 -.124a.555 .555 0 0 1 -.12 -.568l2.468 -7.274l-2.468 -7.274a.555 .555 0 0 1 .12 -.568a.503 .503 0 0 1 .546 -.124z M6.5 12h14.5"
+                  },
+                  {
+                    name: "Табы",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 14m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"
+                  },
+                  {
+                    name: "Пагинация",
+                    icon: "M8 16l2 -6l6 -2l-2 6l-6 2 M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M12 3l0 2 M12 19l0 2 M3 12l2 0 M19 12l2 0"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "frontend": {
+          items: [
+            {
+              name: "Готовые шаблоны",
+              icon: "M19 11H5m14 0a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2v-6a2 2 0 0 1 2 -2m14 0V9a2 2 0 0 0 -2 -2M5 11V9a2 2 0 0 0 2 -2m0 0V5a2 2 0 0 0 2 -2h6a2 2 0 0 0 2 2v2M7 7h10",
+              thirdLevel: {
+                name: "Шаблоны",
+                items: [
+                  {
+                    name: "Шаблон 1",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M8 4v16 M16 4v16 M4 8h4 M4 16h4 M16 8h4 M16 16h4 M4 12h8 M12 4v8"
+                  },
+                  {
+                    name: "Шаблон 2",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 12l16 0 M12 4l0 16"
+                  },
+                  {
+                    name: "Шаблон 3",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M8 4v16"
+                  },
+                  {
+                    name: "Шаблон 4",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h4 M4 16h4 M16 4v4 M16 16v4 M10 4v4 M10 16v4"
+                  },
+                  {
+                    name: "Шаблон 5",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M8 4v16 M16 4v16 M4 8h4 M4 16h4 M16 8h4 M16 16h4 M4 12h8 M12 4v8"
+                  }
+                ]
+              }
+            },
+            {
+              name: "Секции",
+              icon: "M9 12h6 M12 9v6 M4 6v-1a1 1 0 0 1 1 -1h1m5 0h2m5 0h1a1 1 0 0 1 1 1v1m0 5v2m0 5v1a1 1 0 0 1 -1 1h-1m-5 0h-2m-5 0h-1a1 1 0 0 1 -1 -1v-1m0 -5v-2m0 -5",
+              thirdLevel: {
+                name: "Секции",
+                items: [
+                  {
+                    name: "Шапка",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "Подвал",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "Сайдбар",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "Контент",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "Навигация",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  }
+                ]
+              }
+            },
+            {
+              name: "Компоненты",
+              icon: "M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z M14 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z M14 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z",
+              thirdLevel: {
+                name: "Компоненты",
+                items: [
+                  {
+                    name: "Карточка",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M8 4v16 M16 4v16 M4 8h4 M4 16h4 M16 8h4 M16 16h4"
+                  },
+                  {
+                    name: "Список",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "Форма",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M8 4v16 M16 4v16 M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "Таблица",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16 M8 4v16 M12 4v16 M16 4v16"
+                  },
+                  {
+                    name: "Сетка",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16 M8 4v16 M12 4v16 M16 4v16"
+                  }
+                ]
+              }
+            },
+            {
+              name: "Разметка",
+              icon: "M3 6h18 M3 12h18 M3 18h18 M6 3v18 M12 3v18 M18 3v18",
+              thirdLevel: {
+                name: "Разметка",
+                items: [
+                  {
+                    name: "HTML",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "CSS",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "Flexbox",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "Grid",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16 M8 4v16 M12 4v16 M16 4v16"
+                  },
+                  {
+                    name: "Семантика",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 8h16 M4 12h16 M4 16h16"
+                  }
+                ]
+              }
+            },
+            {
+              name: "Модальные элементы",
+              icon: "M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z M15 4v1 M15 9v1 M15 14v1 M15 19v1",
+              thirdLevel: {
+                name: "Модальные элементы",
+                items: [
+                  {
+                    name: "Модальное окно",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Всплывающее окно",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Тултип",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Диалог",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Уведомление",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "backend": {
+          items: [
+            {
+              name: "Модули",
+              icon: "M12 12v.01 M19.071 4.929c-1.562 -1.562 -6 .337 -9.9 4.243c-3.905 3.905 -5.804 8.337 -4.242 9.9c1.562 1.561 6 -.338 9.9 -4.244c3.905 -3.905 5.804 -8.337 4.242 -9.9 M4.929 4.929c-1.562 1.562 .337 6 4.243 9.9c3.905 3.905 8.337 5.804 9.9 4.242c1.561 -1.562 -.338 -6 -4.244 -9.9c-3.905 -3.905 -8.337 -5.804 -9.9 -4.242",
+              thirdLevel: {
+                name: "Модули",
+                items: [
+                  {
+                    name: "Аутентификация",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "База данных",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "API",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Кэширование",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Логирование",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  }
+                ]
+              }
+            },
+            {
+              name: "Память",
+              icon: "M12 6m-8 0a8 3 0 1 0 16 0a8 3 0 1 0 -16 0 M4 6v6a8 3 0 0 0 16 0v-6 M4 12v6a8 3 0 0 0 16 0v-6",
+              thirdLevel: {
+                name: "Память",
+                items: [
+                  {
+                    name: "RAM",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Кэш",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Диск",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Сессии",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Куки",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  }
+                ]
+              }
+            },
+            {
+              name: "Интеграция",
+              icon: "M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01",
+              thirdLevel: {
+                name: "Интеграция",
+                items: [
+                  {
+                    name: "Внешние API",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Соц. сети",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Платежи",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Email",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "SMS",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  }
+                ]
+              }
+            },
+            {
+              name: "Оптимизация",
+              icon: "M11.414 10l-7.383 7.418a2.091 2.091 0 0 0 0 2.967a2.11 2.11 0 0 0 2.976 0l7.407 -7.385 M18.121 15.293l2.586 -2.586a1 1 0 0 0 0 -1.414l-7.586 -7.586a1 1 0 0 0 -1.414 0l-2.586 2.586a1 1 0 0 0 0 1.414l7.586 7.586a1 1 0 0 0 1.414 0z",
+              thirdLevel: {
+                name: "Оптимизация",
+                items: [
+                  {
+                    name: "Производительность",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Кэширование",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Сжатие",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Ленивая загрузка",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Минфикация",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  }
+                ]
+              }
+            },
+            {
+              name: "Логика",
+              icon: "M16.54 7c-.805 -2.365 -2.536 -4 -4.54 -4c-2.774 0 -5.023 2.632 -5.023 6.496c0 1.956 1.582 4.727 2.512 6 M4.711 11.979c-1.656 1.877 -2.214 4.185 -1.211 5.911c1.387 2.39 5.138 2.831 8.501 .9c1.703 -.979 2.875 -3.362 3.516 -4.798 M15.014 19.99c2.511 0 4.523 -.438 5.487 -2.1c1.387 -2.39 -.215 -5.893 -3.579 -7.824c-1.702 -.979 -4.357 -1.235 -5.927 -1.07 M10.493 9.862c.48 .276 1.095 .112 1.372 -.366a1 1 0 0 0 -.367 -1.365a1.007 1.007 0 0 0 -1.373 .366a1 1 0 0 0 .368 1.365z M9.5 15.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0 M15.5 14m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0",
+              thirdLevel: {
+                name: "Логика",
+                items: [
+                  {
+                    name: "Условия",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Циклы",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Функции",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Обработка ошибок",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Асинхронность",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "settings": {
+          items: [
+            {
+              name: "Вкладки",
+              svg: `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M3 7l6 -3l6 3l6 -3v13l-6 3l-6 -3l-6 3v-13" />
+  <path d="M9 4v13" />
+  <path d="M15 7v13" />
+</svg>`,
+              thirdLevel: {
+                name: "Вкладки",
+                items: [
+                  {
+                    name: "Папки",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M8 4v16 M16 4v16 M4 8h4 M4 16h4 M16 8h4 M16 16h4"
+                  },
+                  {
+                    name: "Файлы",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M8 4v16 M16 4v16 M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "Конфиги",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M8 4v16 M16 4v16 M4 8h16 M4 12h16 M4 16h16"
+                  },
+                  {
+                    name: "Зависимости",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Скрипты",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M8 4v16 M16 4v16 M4 8h16 M4 12h16 M4 16h16"
+                  }
+                ]
+              }
+            },
+            {
+              name: "Тема",
+              icon: "", // Пустая иконка, будет генерироваться динамически
+              thirdLevel: {
+                name: "Тема",
+                items: [
+                  {
+                    name: "Темы",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Цвета",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Шрифты",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Размеры",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Анимации",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  }
+                ]
+              }
+            },
+            {
+              name: "Язык",
+              svg: `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+  <path d="M3.6 9h16.8" />
+  <path d="M3.6 15h16.8" />
+  <path d="M11.5 3a17 17 0 0 0 0 18" />
+  <path d="M12.5 3a17 17 0 0 1 0 18" />
+</svg>`,
+              thirdLevel: {
+                name: "Язык",
+                items: [
+                  {
+                    name: "Русский",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Английский",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Китайский",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Испанский",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Французский",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  }
+                ]
+              }
+            },
+            {
+              name: "Инфо",
+              svg: `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+  <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+  <path d="M3 6l0 13" />
+  <path d="M12 6l0 13" />
+  <path d="M21 6l0 13" />
+</svg>`,
+              thirdLevel: {
+                name: "Инфо",
+                items: [
+                  {
+                    name: "О программе",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Версия",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Лицензия",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Помощь",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Контакты",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  }
+                ]
+              }
+            },
+            {
+              name: "SEO",
+              svg: `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 21a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3a12 12 0 0 0 8.5 3c.539 1.832 .627 3.747 .283 5.588" />
+  <path d="M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+  <path d="M20.2 20.2l1.8 1.8" />
+</svg>`,
+              thirdLevel: {
+                name: "SEO",
+                items: [
+                  {
+                    name: "Мета-теги",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Sitemap",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Robots.txt",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Open Graph",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  },
+                  {
+                    name: "Структура URL",
+                    icon: "M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M12 8v8 M8 12h8"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      };
+
+      // Функция для создания блока
+      function createBlock(svgHTML) {
+        const blockDiv = document.createElement('div');
+        blockDiv.className = 'block';
+        blockDiv.innerHTML = svgHTML;
+        return blockDiv;
+      }
+
+      // Функция для переключения темы
+      function toggleTheme() {
+        isDarkTheme = !isDarkTheme;
+        document.body.classList.toggle('dark-theme', isDarkTheme);
+
+        // Обновляем иконку для кнопки "Тема"
+        updateThemeIcon();
+
+        // Сохраняем состояние темы в localStorage
+        localStorage.setItem('theme', isDarkTheme ? 'dark' : 'light');
+      }
+
+      // Функция для получения SVG солнца
+      function getSunSVG() {
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" class="theme-icon-transition">
+          <path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+          <path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />
+        </svg>`;
+      }
+
+      // Функция для получения SVG луны
+      function getMoonSVG() {
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" class="theme-icon-transition">
+          <path d="M12 3h.393a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+        </svg>`;
+      }
+
+      // Функция для обновления иконки темы
+      function updateThemeIcon() {
+        // Обновляем иконку в данных категории
+        if (categoryData.settings && categoryData.settings.items) {
+          const themeItem = categoryData.settings.items.find(item => item.name === "Тема");
+          if (themeItem) {
+            // Используем SVG вместо path
+            themeItem.svg = isDarkTheme ? getMoonSVG() : getSunSVG();
+          }
+        }
+
+        // Если подменю открыто, перерисовываем его
+        if (currentCategory === 'settings' && submenuContainer.classList.contains('active')) {
+          showSubcategories('settings');
+        }
+      }
+
+      // Функция для показа главного меню
+      function showMainMenu() {
+        // Скрываем все подменю
+        submenuContainer.classList.remove('active');
+        thirdLevelContainer.classList.remove('active');
+
+        // Очищаем контентную область
+        contentArea.innerHTML = '';
+        contentArea.style.padding = '80px 20px 100px 20px';
+
+        // Уничтожаем редактор если он есть
+        if (editor) {
+          editor = null;
+        }
+
+        // Показываем основные меню
+        setTimeout(() => {
+          mainMenuContainer.style.opacity = '1';
+          mainMenuContainer.style.pointerEvents = 'all';
+          submenuContainer.innerHTML = '';
+          thirdLevelContainer.innerHTML = '';
+          currentCategory = null;
+          currentSubcategory = null;
+        }, 300);
+      }
+
+      // Функция для показа подкатегорий
+      function showSubcategories(categoryId) {
+        const category = categoryData[categoryId];
+        if (!category) return;
+
+        currentCategory = categoryId;
+
+        // Очищаем контентную область
+        contentArea.innerHTML = '';
+
+        // Для UX категории показываем редактор
+        if (categoryId === 'ux') {
+          contentArea.innerHTML = `
+            <div class="editor fade-in-up">
+              <div class="canvas" id="canvas">
+                <div class="dots" id="dots"></div>
+                <div id="shapesContainer"></div>
+              </div>
+            </div>
+          `;
+          contentArea.style.padding = '50px 0 69px 0';
+          editor = new ToroidalGridEditor();
+        } else {
+          contentArea.style.padding = '80px 20px 100px 20px';
+        }
+
+        // Скрываем основное меню
+        mainMenuContainer.style.opacity = '0';
+        mainMenuContainer.style.pointerEvents = 'none';
+
+        // Скрываем третье меню если было открыто
+        thirdLevelContainer.classList.remove('active');
+
+        // Очищаем и заполняем контейнер подкатегорий
+        submenuContainer.innerHTML = '';
+
+        category.items.forEach((subItem, index) => {
+          const submenuItem = document.createElement('button');
+          submenuItem.className = 'nav-item submenu-item theme-icon-transition';
+
+          // Убираем все анимации задержки для стабильности
+          submenuItem.style.animationDelay = '0s';
+          submenuItem.style.animation = 'none';
+
+          // Если это активная подкатегория, добавляем класс active
+          if (currentSubcategory === subItem.name) {
+            submenuItem.classList.add('active');
+          }
+
+          // Специальная обработка для кнопки "Тема"
+          if (subItem.name === "Тема") {
+            submenuItem.classList.add('theme-toggle-icon');
+
+            // Используем полноценный SVG вместо path
+            const svgContent = isDarkTheme ? getMoonSVG() : getSunSVG();
+
+            submenuItem.innerHTML = `
+              <div class="nav-icon" style="--icon-size: 26px; --stroke-width: 1.5;">
+                ${svgContent}
+              </div>
+              <span>${subItem.name}</span>
+            `;
+
+            // Добавляем обработчик для переключения темы
+            submenuItem.addEventListener('click', (e) => {
+              e.stopPropagation(); // Предотвращаем всплытие
+              e.preventDefault(); // Предотвращаем стандартное поведение
+
+              // Плавное переключение с небольшой анимацией
+              const iconElement = submenuItem.querySelector('.nav-icon');
+              iconElement.style.transform = 'scale(0.9)';
+
+              setTimeout(() => {
+                toggleTheme();
+                iconElement.style.transform = 'scale(1)';
+              }, 100);
+            });
+          } else {
+            // Обычные подкатегории
+            if (subItem.svg) {
+              // Используем SVG если есть
+              submenuItem.innerHTML = `
+                <div class="nav-icon" style="--icon-size: 24px; --stroke-width: 1.5;">
+                  ${subItem.svg}
+                </div>
+                <span>${subItem.name}</span>
+              `;
+            } else {
+              // Используем обычный SVG с path
+              submenuItem.innerHTML = `
+                <div class="nav-icon" style="--icon-size: 24px; --stroke-width: 1.5;">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="theme-icon-transition">
+                    <path d="${subItem.icon}" />
+                  </svg>
+                </div>
+                <span>${subItem.name}</span>
+              `;
+            }
+
+            submenuItem.addEventListener('click', () => {
+              // Если кликаем на активную подкатегорию, показываем третий уровень
+              if (currentSubcategory === subItem.name) {
+                showThirdLevelMenu(subItem);
+              } else {
+                // Иначе делаем ее активной и показываем третий уровень
+                currentSubcategory = subItem.name;
+                document.querySelectorAll('.submenu-item').forEach(item => {
+                  item.classList.remove('active');
+                });
+                submenuItem.classList.add('active');
+                showThirdLevelMenu(subItem);
+              }
+            });
+          }
+
+          submenuContainer.appendChild(submenuItem);
+        });
+
+        // Показываем подкатегории
+        setTimeout(() => {
+          submenuContainer.classList.add('active');
+        }, 50);
+      }
+
+      // Функция для показа третьего уровня меню
+      function showThirdLevelMenu(subItem) {
+        // Скрываем подкатегории
+        submenuContainer.classList.remove('active');
+
+        // Очищаем контейнер третьего уровня
+        thirdLevelContainer.innerHTML = '';
+
+        // Создаем элементы третьего уровня
+        if (subItem.thirdLevel && subItem.thirdLevel.items) {
+          subItem.thirdLevel.items.forEach((thirdItem, index) => {
+            const thirdLevelItem = document.createElement('button');
+            thirdLevelItem.className = 'nav-item third-level-item';
+            thirdLevelItem.style.animationDelay = '0s';
+            thirdLevelItem.style.animation = 'none';
+
+            // Проверяем, есть ли полноценный SVG или только path
+            let iconHTML = '';
+            if (thirdItem.svg) {
+              // Используем полноценный SVG с текстом в разных формах
+              iconHTML = `
+                <div class="text-icon theme-icon-transition">
+                  ${thirdItem.svg}
+                </div>
+              `;
+            } else {
+              // Используем обычный SVG с path - увеличенный размер для третьего уровня
+              const iconSize = "33px";
+              const strokeWidth = "1.2";
+
+              iconHTML = `
+                <div class="nav-icon theme-icon-transition" style="--icon-size: ${iconSize}; --stroke-width: ${strokeWidth};">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="${thirdItem.icon}" />
+                  </svg>
+                </div>
+              `;
+            }
+
+            thirdLevelItem.innerHTML = `
+              ${iconHTML}
+              <span>${thirdItem.name}</span>
+            `;
+
+            thirdLevelItem.addEventListener('click', () => {
+              console.log(`Выбран элемент: ${thirdItem.name}`);
+
+              // Если мы в UX редакторе, добавляем элемент на холст
+              if (editor && currentCategory === 'ux') {
+                let svgStr;
+                if (thirdItem.svg) {
+                  svgStr = thirdItem.svg;
+                } else if (thirdItem.icon) {
+                  svgStr = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="${thirdItem.icon}" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`;
+                }
+                if (svgStr) {
+                  const blockDiv = createBlock(svgStr);
+                  editor.addShape(blockDiv);
+                  thirdLevelItem.style.animation = 'pulse 0.3s ease';
+                  setTimeout(() => {
+                    thirdLevelItem.style.animation = '';
+                  }, 300);
+                }
+              }
+            });
+
+            thirdLevelContainer.appendChild(thirdLevelItem);
+          });
+        }
+
+        // Показываем третий уровень меню
+        setTimeout(() => {
+          thirdLevelContainer.classList.add('active');
+        }, 50);
+      }
+
+      // Функция для возврата на уровень выше
+      function goBackOneLevel() {
+        if (thirdLevelContainer.classList.contains('active')) {
+          // Если открыт третий уровень, закрываем его
+          thirdLevelContainer.classList.remove('active');
+          setTimeout(() => {
+            submenuContainer.classList.add('active');
+          }, 50);
+        } else if (submenuContainer.classList.contains('active')) {
+          // Если открыты подкатегории, возвращаемся к главному меню
+          showMainMenu();
+        }
+      }
+
+      // Обработчики для главных меню
+      document.querySelectorAll('.main-menu').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+
+          const category = item.getAttribute('data-category');
+
+          if (currentCategory === category && submenuContainer.classList.contains('active')) {
+            // Если кликаем на активную категорию и открыты подкатегории
+            goBackOneLevel();
+          } else {
+            // Убираем активный класс у всех элементов
+            document.querySelectorAll('.main-menu').forEach(menu => {
+              menu.classList.remove('active');
+            });
+
+            // Добавляем активный класс к текущему элементу
+            item.classList.add('active');
+
+            // Сбрасываем текущую подкатегорию
+            currentSubcategory = null;
+
+            // Показываем подкатегории
+            showSubcategories(category);
+          }
+        });
+      });
+
+      // Обработчик для возврата на уровень выше при клике вне меню
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.bottom-nav') &&
+            (submenuContainer.classList.contains('active') ||
+             thirdLevelContainer.classList.contains('active'))) {
+          goBackOneLevel();
+        }
+      });
+
+      // Предотвращаем закрытие при клике внутри нижней панели
+      document.querySelector('.bottom-nav').addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+
+      // Загружаем сохраненную тему из localStorage
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        isDarkTheme = true;
+        document.body.classList.add('dark-theme');
+      }
+
+      // Инициализируем иконку для темы
+      updateThemeIcon();
+
+      // Инициализация - показываем главное меню
+      showMainMenu();
+
+      // Класс редактора UX
+      class ToroidalGridEditor {
+        constructor() {
+          this.canvas = document.getElementById('canvas');
+          this.dots = document.getElementById('dots');
+          this.shapesContainer = document.getElementById('shapesContainer');
+          this.DOTS_SIZE = 500;
+          this.GRID_SIZE = 15.5;
+          this.state = {
+            scale: 1.29,
+            x: 0,
+            y: 0,
+            minScale: 0.1,
+            maxScale: 20,
+            lastX: 0,
+            lastY: 0,
+            dragging: false,
+            velocityX: 0,
+            velocityY: 0,
+            lastMoveTime: 0
+          };
+          this.shapes = [];
+          this.draggingShape = null;
+          this.dragOffsetX = 0;
+          this.dragOffsetY = 0;
+          this.init();
+        }
+
+        init() {
+          this.setupEvents();
+          this.update();
+        }
+
+        setupEvents() {
+          const startCanvasDrag = (x, y) => {
+            this.state.dragging = true;
+            this.state.velocityX = 0;
+            this.state.velocityY = 0;
+            this.state.lastX = x;
+            this.state.lastY = y;
+            this.state.lastMoveTime = performance.now();
+          };
+
+          const canvasDragMove = (x, y) => {
+            if (!this.state.dragging) return;
+            const dx = x - this.state.lastX;
+            const dy = y - this.state.lastY;
+            this.state.x += dx;
+            this.state.y += dy;
+            const now = performance.now();
+            const dt = now - this.state.lastMoveTime || 16;
+            this.state.lastMoveTime = now;
+            this.state.velocityX = dx / dt;
+            this.state.velocityY = dy / dt;
+            this.state.lastX = x;
+            this.state.lastY = y;
+            this.update();
+          };
+
+          const endCanvasDrag = () => {
+            if (this.state.dragging) this.startInertia();
+            this.state.dragging = false;
+          };
+
+          this.canvas.addEventListener("mousedown", (e) => {
+            if (e.target === this.canvas || e.target === this.dots) {
+              startCanvasDrag(e.clientX, e.clientY);
+            }
+          });
+
+          document.addEventListener("mousemove", (e) => {
+            if (this.draggingShape) {
+              const newX = e.clientX - this.dragOffsetX;
+              const newY = e.clientY - this.dragOffsetY;
+              this.draggingShape.worldX = (newX - this.state.x) / this.state.scale;
+              this.draggingShape.worldY = (newY - this.state.y) / this.state.scale;
+              this.updateShapes();
+            } else {
+              canvasDragMove(e.clientX, e.clientY);
+            }
+          });
+
+          document.addEventListener("mouseup", () => {
+            this.draggingShape = null;
+            endCanvasDrag();
+          });
+
+          this.canvas.addEventListener("touchstart", (e) => {
+            if (e.touches.length === 1) {
+              const t = e.touches[0];
+              if (e.target === this.canvas || e.target === this.dots) {
+                startCanvasDrag(t.clientX, t.clientY);
+              }
+            }
+          }, { passive: false });
+
+          this.canvas.addEventListener("touchmove", (e) => {
+            if (e.touches.length === 1) {
+              const t = e.touches[0];
+              if (this.draggingShape) {
+                const newX = t.clientX - this.dragOffsetX;
+                const newY = t.clientY - this.dragOffsetY;
+                this.draggingShape.worldX = (newX - this.state.x) / this.state.scale;
+                this.draggingShape.worldY = (newY - this.state.y) / this.state.scale;
+                this.updateShapes();
+                e.preventDefault();
+              } else {
+                canvasDragMove(t.clientX, t.clientY);
+                e.preventDefault();
+              }
+            }
+          }, { passive: false });
+
+          this.canvas.addEventListener("touchend", () => {
+            this.draggingShape = null;
+            endCanvasDrag();
+          });
+
+          this.canvas.addEventListener("wheel", e => {
+            e.preventDefault();
+            const zoomSpeed = 0.002;
+            const delta = e.deltaY * zoomSpeed;
+            const oldScale = this.state.scale;
+            this.state.scale = Math.max(
+              this.state.minScale,
+              Math.min(this.state.maxScale, this.state.scale - delta)
+            );
+            const rect = this.canvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+            const scaleChange = this.state.scale / oldScale;
+            this.state.x = mx - (mx - this.state.x) * scaleChange;
+            this.state.y = my - (my - this.state.y) * scaleChange;
+            this.update();
+          });
+
+          this.canvas.addEventListener("dblclick", () => {
+            this.state.scale = 1.29;
+            this.state.x = 0;
+            this.state.y = 0;
+            this.update();
+          });
+        }
+
+        startInertia() {
+          const friction = 0.95;
+          const minVelocity = 0.001;
+          const step = () => {
+            if (this.state.dragging) return;
+            this.state.velocityX *= friction;
+            this.state.velocityY *= friction;
+            if (Math.abs(this.state.velocityX) < minVelocity &&
+                Math.abs(this.state.velocityY) < minVelocity) return;
+            this.state.x += this.state.velocityX * 20;
+            this.state.y += this.state.velocityY * 20;
+            this.update();
+            requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+        }
+
+        addShape(shapeDiv) {
+          const viewWidth = this.canvas.clientWidth;
+          const viewHeight = this.canvas.clientHeight;
+          const worldX = (viewWidth / 2 - this.state.x) / this.state.scale;
+          const worldY = (viewHeight / 2 - this.state.y) / this.state.scale;
+          const baseWidth = 120;
+          const baseHeight = 80;
+          const shape = { div: shapeDiv, worldX, worldY, baseWidth, baseHeight };
+          this.shapes.push(shape);
+          this.shapesContainer.appendChild(shapeDiv);
+          this.setupShapeDragging(shape);
+          this.updateShapes();
+          setTimeout(() => {
+            shapeDiv.style.animation = 'pulse 0.3s ease';
+            setTimeout(() => {
+              shapeDiv.style.animation = '';
+            }, 300);
+          }, 100);
+        }
+
+        setupShapeDragging(shape) {
+          const div = shape.div;
+          div.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.draggingShape = shape;
+            this.dragOffsetX = e.clientX - (shape.worldX * this.state.scale + this.state.x);
+            this.dragOffsetY = e.clientY - (shape.worldY * this.state.scale + this.state.y);
+            div.style.cursor = 'grabbing';
+            div.style.zIndex = '100';
+          });
+
+          div.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+              e.preventDefault();
+              e.stopPropagation();
+              this.draggingShape = shape;
+              const t = e.touches[0];
+              this.dragOffsetX = t.clientX - (shape.worldX * this.state.scale + this.state.x);
+              this.dragOffsetY = t.clientY - (shape.worldY * this.state.scale + this.state.y);
+              div.style.cursor = 'grabbing';
+              div.style.zIndex = '100';
+            }
+          }, { passive: false });
+        }
+
+        updateShapes() {
+          this.shapes.forEach(shape => {
+            const width = shape.baseWidth * this.state.scale;
+            const height = shape.baseHeight * this.state.scale;
+            shape.div.style.width = `${width}px`;
+            shape.div.style.height = `${height}px`;
+            shape.div.style.left = `${shape.worldX * this.state.scale + this.state.x - width / 2}px`;
+            shape.div.style.top = `${shape.worldY * this.state.scale + this.state.y - height / 2}px`;
+            if (!this.draggingShape || this.draggingShape !== shape) {
+              shape.div.style.cursor = 'move';
+              shape.div.style.zIndex = '20';
+            }
+          });
+        }
+
+        update() {
+          const modX = ((-this.state.x % this.DOTS_SIZE) + this.DOTS_SIZE) % this.DOTS_SIZE;
+          const modY = ((-this.state.y % this.DOTS_SIZE) + this.DOTS_SIZE) % this.DOTS_SIZE;
+          this.dots.style.backgroundPosition = `-${modX}px -${modY}px`;
+          this.dots.style.backgroundSize =
+            `${this.GRID_SIZE * this.state.scale}px ${this.GRID_SIZE * this.state.scale}px`;
+          this.updateShapes();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
