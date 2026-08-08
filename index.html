@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shopnet</title>
+
+    <!-- Подключаем скрипт Telegram -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <script>
+        async function initTelegramApp() {
+            // Ждем загрузки и инициализируем API
+            window.Telegram.WebApp.ready();
+
+            // Шаг 1: Сразу вытягиваем шторку на максимум вверх
+            window.Telegram.WebApp.expand();
+
+            // Шаг 2: Пробуем принудительно запустить Fullscreen (для переходов из «О себе»)
+            if (window.Telegram.WebApp.requestFullscreen) {
+                try {
+                    await window.Telegram.WebApp.requestFullscreen();
+                } catch (error) {
+                    console.log("Режим полного экрана ожидает действия пользователя");
+                }
+            }
+        }
+
+        // Запуск логики сразу после построения DOM-дерева
+        window.addEventListener('DOMContentLoaded', initTelegramApp);
+    </script>
+
+    <style>
+        /* Общий фон и центрирование */
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: #0c0d12;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ===== КОНТЕЙНЕР (фон без клетчатки) ===== */
+        .chat-container {
+            position: relative;
+            width: 401px;
+            height: 751px;
+            background-color: #1e1f26;
+            border-radius: 0;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            overflow: visible;
+        }
+
+        /* ===== ПАНЕЛЬ НАВИГАЦИИ (НИЖНЯЯ) ===== */
+        .nav-panel {
+            position: absolute;
+            bottom: 15px;
+            left: 10px;
+            right: 90px;
+            display: flex;
+            background-color: #2b303c;
+            border-radius: 40px;
+            padding: 6px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            align-items: center;
+            z-index: 10;
+            overflow: visible;
+            box-sizing: border-box;
+            justify-content: space-between;
+            height: 77px;
+        }
+
+        /* Скользящая подложка - симметричная */
+        .nav-slider {
+            position: absolute;
+            top: 6px;
+            height: 65px;
+            background-color: #383e4c;
+            border-radius: 35px;
+            z-index: -1;
+            will-change: transform, width, opacity;
+            transition: transform 0.28s cubic-bezier(0.25, 1, 0.5, 1),
+                        width 0.28s cubic-bezier(0.25, 1, 0.5, 1),
+                        opacity 0.25s ease;
+            pointer-events: none;
+            opacity: 1;
+        }
+
+        /* Элементы меню */
+        .nav-item {
+            position: relative;
+            display: block;
+            flex: 1;
+            height: 65px;
+            color: #8fa2b2;
+            text-decoration: none;
+            cursor: pointer;
+            border-radius: 35px;
+            user-select: none;
+            transition: color 0.2s ease;
+            box-sizing: border-box;
+            min-width: 0;
+            z-index: 1;
+        }
+
+        /* ===== НОВАЯ КРУГЛАЯ ПАНЕЛЬ (MAJOR BUTTON) ===== */
+        .profile-button {
+            position: absolute;
+            bottom: 15px;
+            right: 10px;
+            width: 77px;
+            height: 77px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 10;
+            user-select: none;
+            box-sizing: border-box;
+            padding: 0;
+            background-color: #1a1a1a;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Сама круглая градиентная кнопка внутри контейнера */
+        .major-coin-button {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: linear-gradient(to bottom, #ffd175 0%, #ff9743 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s ease, filter 0.2s ease;
+            box-shadow:
+                inset 0 4px 8px rgba(255, 255, 255, 0.4),
+                inset 0 -4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ===== СИНИЙ ОБОДОК (МГНОВЕННО, КАК В TELEGRAM) ===== */
+        .profile-button.active .major-coin-button {
+            box-shadow:
+                0 0 0 3px #1a1a1a,
+                0 0 0 6px #2f80ed,
+                inset 0 4px 8px rgba(255, 255, 255, 0.4),
+                inset 0 -4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .major-coin-button:active {
+            transform: scale(0.96);
+            filter: brightness(0.95);
+        }
+
+        /* Белый символ "I" по центру - СТИЛЬ iPHONE */
+        .major-coin-symbol {
+            color: #ffffff;
+            /* Приоритет системным шрифтам Apple для скругленных засечек */
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Helvetica Neue", Arial, sans-serif;
+            font-size: 34px;
+            font-weight: 700;
+            line-height: 1;
+            /* Оптическая компенсация: буква I визуально кажется выше центра из-за отсутствия нижних выносных элементов */
+            margin-top: 2px;
+            text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Иконки внутри панели */
+        .nav-item svg {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 24px;
+            display: block;
+            will-change: fill, stroke;
+        }
+
+        /* Специфические размеры иконок */
+        .nav-item svg.home-icon {
+            width: 28px;
+            height: 28px;
+            top: 7px;
+        }
+        .nav-item .cart-icon {
+            width: 28px;
+            height: 28px;
+            top: 6px;
+        }
+        .nav-item .catalog-icon {
+            width: 28px;
+            height: 28px;
+            top: 6px;
+        }
+        .nav-item svg.chat-icon {
+            width: 28px;
+            height: 28px;
+            top: 6px;
+        }
+
+        /* Текст под иконкой */
+        .nav-item span {
+            position: absolute;
+            bottom: 13px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1;
+            display: block;
+            white-space: nowrap;
+        }
+
+        /* ===== ВСЕ АКТИВНЫЕ ВКЛАДКИ СИНИЕ ===== */
+        .nav-item.active {
+            color: #2f80ed;
+        }
+
+        /* Home иконка */
+        .nav-item:not(.active) svg.home-icon {
+            color: #8fa2b2;
+        }
+        .nav-item:not(.active) svg.home-icon path {
+            fill: #8fa2b2;
+        }
+        .nav-item.active svg.home-icon {
+            color: #2f80ed;
+        }
+        .nav-item.active svg.home-icon path {
+            fill: #2f80ed;
+        }
+
+        /* Cart иконка */
+        .nav-item .cart-icon {
+            color: #8fa2b2;
+        }
+        .nav-item .cart-icon path {
+            stroke: #8fa2b2;
+        }
+        .nav-item.active .cart-icon {
+            color: #2f80ed;
+        }
+        .nav-item.active .cart-icon path {
+            stroke: #2f80ed;
+        }
+
+        /* Favorites иконка */
+        .nav-item .catalog-icon {
+            color: #8fa2b2;
+        }
+        .nav-item.active .catalog-icon {
+            color: #2f80ed;
+        }
+
+        /* Messages иконка */
+        .nav-item:not(.active) svg.chat-icon {
+            color: #8fa2b2;
+        }
+        .nav-item.active svg.chat-icon {
+            color: #2f80ed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+
+        <!-- ====== НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ ====== -->
+        <div class="nav-panel">
+            <div class="nav-slider" id="slider"></div>
+
+            <!-- 1. Home -->
+            <div class="nav-item" id="homeTab" onclick="setActiveTab(this)">
+                <svg class="home-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path fill="currentColor" fill-rule="evenodd" d="M7.435 1.25h9.13c.57 0 1.054 0 1.453.041c.426.044.82.14 1.192.37c.371.23.633.539.863.9c.215.34.432.772.687 1.282l.016.033q.015.03.027.06l1.403 3.547c.168.423.353.95.407 1.488c.055.552-.02 1.183-.453 1.73a2.75 2.75 0 0 1-1.41.945v9.604H22a.75.75 0 0 1 0 1.5H2a.75.75 0 0 1 0-1.5h1.25v-9.604a2.75 2.75 0 0 1-1.41-.944c-.432-.548-.508-1.18-.453-1.73c.054-.54.24-1.066.406-1.489l1.404-3.548l.027-.06l.016-.032c.255-.51.471-.943.687-1.282c.23-.361.492-.67.863-.9c.372-.23.766-.326 1.191-.37c.4-.041.884-.041 1.454-.041M18 10.888a2.75 2.75 0 0 0 1.25.758v9.604h-4v-2.782c0-.44 0-.82-.028-1.13c-.03-.33-.096-.656-.273-.963a2.25 2.25 0 0 0-.824-.824c-.307-.177-.633-.243-.962-.273c-.312-.028-.691-.028-1.13-.028h-.065c-.44 0-.82 0-1.13.028c-.33.03-.656.096-.963.273a2.25 2.25 0 0 0-.824.824c-.177.307-.243.633-.273.962c-.028.312-.028.691-.028 1.13v2.783h-4v-9.603a2.75 2.75 0 0 0 1.25-.76a2.74 2.74 0 0 0 2 .863c.788 0 1.499-.331 2-.863a2.74 2.74 0 0 0 2 .863c.788 0 1.499-.331 2-.863a2.74 2.74 0 0 0 2 .863c.788 0 1.499-.331 2-.863M10.25 21.25h3.5V18.5c0-.481 0-.792-.022-1.027c-.02-.225-.055-.307-.079-.348a.75.75 0 0 0-.274-.274c-.04-.024-.123-.058-.348-.079A13 13 0 0 0 12 16.75c-.481 0-.792 0-1.027.022c-.225.02-.307.055-.348.079a.75.75 0 0 0-.274.274c-.024.04-.059.123-.079.348c-.021.235-.022.546-.022 1.027zM6.75 9a1.25 1.25 0 0 0 2.5 0a.75.75 0 0 1 1.5 0a1.25 1.25 0 0 0 2.5 0a.75.75 0 0 1 1.5 0a1.25 1.25 0 0 0 2.5 0a.75.75 0 0 1 1.5 0a1.25 1.25 0 0 0 2.232.773c.114-.144.17-.342.138-.652c-.032-.322-.151-.688-.308-1.086L19.42 4.517c-.268-.535-.447-.89-.613-1.15c-.16-.252-.274-.361-.386-.43c-.111-.07-.26-.123-.557-.154c-.314-.032-.72-.033-1.336-.033H7.472c-.617 0-1.023 0-1.336.033c-.297.031-.446.085-.557.154s-.226.178-.386.43c-.167.26-.345.615-.613 1.15L3.188 8.035c-.157.398-.276.764-.308 1.086c-.031.31.024.508.138.652A1.25 1.25 0 0 0 5.25 9a.75.75 0 0 1 1.5 0" clip-rule="evenodd"/>
+                </svg>
+                <span>Home</span>
+            </div>
+
+            <!-- 2. Cart -->
+            <div class="nav-item" id="cartTab" onclick="setActiveTab(this)">
+                <svg class="cart-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <title>shopping-basket-03</title>
+                    <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.5 8.5h19l-1.164 6.986c-.4 2.395-.599 3.592-1.438 4.303c-.84.711-2.053.711-4.48.711H9.582c-2.428 0-3.642 0-4.48-.71c-.84-.712-1.04-1.91-1.439-4.304zm9.5 4v4m4-4v4m-8-4v4m14.5-8h-21m16.5 0l-3-5m-9 5l3-5"/>
+                </svg>
+                <span>Cart</span>
+            </div>
+
+            <!-- 3. Favorites -->
+            <div class="nav-item active" id="defaultTab" onclick="setActiveTab(this)">
+                <svg class="catalog-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16.0001 9C16.0001 9.55229 15.5523 10 15.0001 10C14.4478 10 14.0001 9.55229 14.0001 9C14.0001 8.44772 14.4478 8 15.0001 8C15.5523 8 16.0001 8.44772 16.0001 9Z" fill="currentColor"/>
+                    <path d="M10.0001 9C10.0001 9.55229 9.55235 10 9.00006 10C8.44778 10 8.00006 9.55229 8.00006 9C8.00006 8.44772 8.44778 8 9.00006 8C9.55235 8 10.0001 8.44772 10.0001 9Z" fill="currentColor"/>
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12.0001 2.75C10.7574 2.75 9.75006 3.75736 9.75006 5V5.25447C10.1676 5.24999 10.6183 5.25 11.1053 5.25H12.8948C13.3819 5.25 13.8326 5.24999 14.2501 5.25447V5C14.2501 3.75736 13.2427 2.75 12.0001 2.75ZM15.7501 5.30694V5C15.7501 2.92893 14.0711 1.25 12.0001 1.25C9.929 1.25 8.25006 2.92893 8.25006 5V5.30694C8.11506 5.31679 7.98479 5.32834 7.85904 5.34189C6.98068 5.43657 6.24614 5.63489 5.59385 6.08197C5.3695 6.23574 5.15877 6.40849 4.96399 6.59833C4.39766 7.15027 4.05914 7.83166 3.79405 8.67439C3.53667 9.49258 3.32867 10.5327 3.06729 11.8396L3.04822 11.935C2.67158 13.8181 2.37478 15.302 2.28954 16.484C2.20244 17.6916 2.32415 18.7075 2.89619 19.588C3.08705 19.8817 3.30982 20.1534 3.56044 20.3982C4.31157 21.1318 5.28392 21.4504 6.48518 21.6018C7.66087 21.75 9.17418 21.75 11.0946 21.75H12.9055C14.826 21.75 16.3393 21.75 17.5149 21.6018C18.7162 21.4504 19.6886 21.1318 20.4397 20.3982C20.6903 20.1534 20.9131 19.8817 21.1039 19.588C21.676 18.7075 21.7977 17.6916 21.7106 16.484C21.6254 15.3021 21.3286 13.8182 20.9519 11.9351L20.9328 11.8396C20.6715 10.5327 20.4635 9.49259 20.2061 8.67439C19.941 7.83166 19.6025 7.15027 19.0361 6.59833C18.8414 6.40849 18.6306 6.23574 18.4063 6.08197C17.754 5.63489 17.0194 5.43657 16.1411 5.34189C16.0153 5.32834 15.8851 5.31679 15.7501 5.30694ZM8.01978 6.83326C7.27307 6.91374 6.81176 7.06572 6.44188 7.31924C6.28838 7.42445 6.1442 7.54265 6.01093 7.67254C5.68979 7.98552 5.45028 8.40807 5.22492 9.12449C4.99463 9.85661 4.80147 10.8172 4.52967 12.1762C4.14013 14.1239 3.8633 15.5153 3.78565 16.5919C3.70906 17.6538 3.83838 18.2849 4.15401 18.7707C4.2846 18.9717 4.43702 19.1576 4.60849 19.3251C5.02293 19.7298 5.61646 19.9804 6.67278 20.1136C7.74368 20.2486 9.1623 20.25 11.1486 20.25H12.8515C14.8378 20.25 16.2564 20.2486 17.3273 20.1136C18.3837 19.9804 18.9772 19.7298 19.3916 19.3251C19.5631 19.1576 19.7155 18.9717 19.8461 18.7707C20.1617 18.2849 20.2911 17.6538 20.2145 16.5919C20.1368 15.5153 19.86 14.1239 19.4705 12.1762C19.1987 10.8173 19.0055 9.85661 18.7752 9.12449C18.5498 8.40807 18.3103 7.98552 17.9892 7.67254C17.8559 7.54265 17.7118 7.42445 17.5582 7.31924C17.1884 7.06572 16.7271 6.91374 15.9803 6.83326C15.2173 6.75101 14.2374 6.75 12.8515 6.75H11.1486C9.76271 6.75 8.78285 6.75101 8.01978 6.83326Z" fill="currentColor"/>
+                </svg>
+                <span>Favorites</span>
+            </div>
+
+            <!-- 4. Messages -->
+            <div class="nav-item" id="messagesTab" onclick="setActiveTab(this)">
+                <svg class="chat-icon" viewBox="0 0 32 32">
+                    <path fill="currentColor" d="M2 13.5C2 7.701 6.701 3 12.5 3S23 7.701 23 13.5S18.3 24 12.5 24c-1.686 0-3.281-.398-4.695-1.106L3.89 23.943a1.5 1.5 0 0 1-1.837-1.837l1.05-3.918A10.4 10.4 0 0 1 2 13.5m10.5 12q1-.001 1.955-.158A8.46 8.46 0 0 0 19.5 27c1.486 0 2.88-.38 4.094-1.049a1 1 0 0 1 .741-.09l3.456.926l-.926-3.458a1 1 0 0 1 .09-.74A8.46 8.46 0 0 0 28 18.5a8.49 8.49 0 0 0-3.665-6.991a12 12 0 0 0-.787-2.7A10.5 10.5 0 0 1 30 18.5a10.5 10.5 0 0 1-1.102 4.688l1.05 3.918a1.5 1.5 0 0 1-1.838 1.837l-3.915-1.049A10.46 10.46 0 0 1 19.5 29c-3.124 0-5.93-1.364-7.853-3.53q.423.03.853.03"/>
+                </svg>
+                <span>Messages</span>
+            </div>
+        </div>
+
+        <!-- ====== НОВАЯ КРУГЛАЯ ПАНЕЛЬ (MAJOR BUTTON) ====== -->
+        <div class="profile-button" id="profileButton" onclick="setActiveProfile(this)">
+            <div class="major-coin-button">
+                <span class="major-coin-symbol">I</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== СКРИПТ НАВИГАЦИИ ========== -->
+    <script>
+        const slider = document.getElementById('slider');
+        let isProfileActive = false;
+
+        function setActiveTab(element) {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Убираем активный класс у Profile - мгновенно
+            document.getElementById('profileButton').classList.remove('active');
+
+            element.classList.add('active');
+
+            const parent = element.parentElement;
+            const parentRect = parent.getBoundingClientRect();
+            const elementRect = element.getBoundingClientRect();
+
+            const offsetLeft = elementRect.left - parentRect.left;
+            const padding = 6;
+
+            const elementWidth = Math.round(elementRect.width);
+            const sliderWidth = elementWidth - 4;
+            const sliderOffset = Math.round(offsetLeft - padding + 2);
+
+            if (isProfileActive) {
+                slider.style.transition = 'none';
+                slider.style.width = `${sliderWidth}px`;
+                slider.style.transform = `translateX(${sliderOffset}px)`;
+
+                void slider.offsetHeight;
+
+                slider.style.transition = 'opacity 0.25s ease';
+                slider.style.opacity = '1';
+                isProfileActive = false;
+            } else {
+                slider.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1), width 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
+                slider.style.width = `${sliderWidth}px`;
+                slider.style.transform = `translateX(${sliderOffset}px)`;
+                slider.style.opacity = '1';
+            }
+        }
+
+        function setActiveProfile(element) {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            slider.style.transition = 'opacity 0.25s ease';
+            slider.style.opacity = '0';
+            isProfileActive = true;
+
+            // Мгновенно добавляем синий ободок (без анимации)
+            element.classList.add('active');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const defaultTab = document.getElementById('defaultTab');
+            if (defaultTab) {
+                setActiveTab(defaultTab);
+            }
+        });
+    </script>
+
+</body>
+</html>
