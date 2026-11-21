@@ -1,0 +1,4599 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Shopnet</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root {
+  --nav-height: 77px;
+  --nav-bottom: 15px;
+  --nav-gap: 3px;
+  --nav-radius: 40px;
+  --panel-side: 10px;
+  --panel-pad: 4px;
+  --side-inset: calc(var(--panel-side) + var(--panel-pad));
+  --search-top: 50px;
+  --capsule-top: 96px;
+  --capsule-height: 88px;
+  --rise-distance: 46px;
+  --panel-pad-x: 8px;
+  --delete-width: 118px;
+  --center-btn-size: 36px;
+  --capsule-gap: 4px;
+  --width-anim: 0.3s;
+  --width-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --card-bg: #2C2C2E;
+  --active-bg: #464648;
+  --bg-element: #3A3A3C;
+  --text-primary: #ffffff;
+  --text-secondary: #8e8e93;
+  --text-muted: #a0a0a2;
+  --border-soft: rgba(255, 255, 255, 0.15);
+  --divider: rgba(255, 255, 255, 0.08);
+  --accent-blue: #0a84ff;
+  --accent-red: #ff453a;
+  --tg-blue: #3390ec;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+  background-color: #0c0d12;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+  overflow: hidden;
+}
+
+.svg-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.chat-container {
+  position: relative;
+  width: 100%;
+  max-width: 401px;
+  height: 100%;
+  max-height: 751px;
+  background-color: #1C1C1E;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================
+   ОБЩАЯ ШАПКА (уровни как в Home)
+   ============================================================ */
+.floating-panel {
+  background-color: transparent;
+  border-radius: 0;
+  padding: var(--panel-pad);
+  user-select: none;
+  z-index: 25;
+  display: none;
+  height: 44px;
+  align-items: center;
+  position: absolute;
+  isolation: isolate;
+  border: none;
+  outline: none;
+  width: calc(100% - (var(--panel-side) * 2));
+  left: var(--panel-side);
+}
+
+.floating-panel.visible { display: flex; }
+
+.edit-panel {
+  top: 10px;
+  width: auto;
+  min-width: 70px;
+  justify-content: center;
+}
+
+.btn-edit {
+  background-color: #2C2C2E;
+  color: #ffffff;
+  border: 1px solid var(--border-soft);
+  font-size: 15px;
+  font-weight: 400;
+  padding: 6px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title-panel {
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  padding: 4px 16px;
+  justify-content: center;
+  background-color: #2C2C2E;
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+}
+
+.header-title {
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.buttons-panel {
+  top: 10px;
+  left: auto;
+  right: var(--panel-side);
+  width: auto;
+  min-width: 80px;
+  justify-content: center;
+}
+
+.right-capsule {
+  display: flex;
+  align-items: center;
+  background-color: #2C2C2E;
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  padding: 2px;
+  height: 36px;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  width: 34px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.search-panel {
+  top: var(--search-top);
+  right: var(--panel-side);
+  transform-origin: top center;
+  will-change: transform, opacity;
+  z-index: 26;
+}
+
+.search-wrapper {
+  width: 100%;
+  height: 36px;
+  background-color: #2C2C2E;
+  border: none;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.search-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 16px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.categories-panel {
+  top: var(--capsule-top);
+  right: var(--panel-side);
+  will-change: transform;
+  z-index: 24;
+}
+
+/* ============================================================
+   ЛЕНТА ВКЛАДОК
+   ============================================================ */
+.scroll-capsule {
+  width: 100%;
+  height: 36px;
+  background-color: #2C2C2E;
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  padding: 3px 4px;
+  display: flex;
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.scroll-capsule::-webkit-scrollbar { display: none; }
+
+.active-bg {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  width: 0;
+  background-color: var(--active-bg);
+  border-radius: 16px;
+  z-index: 1;
+  pointer-events: none;
+  transition: left 0.35s cubic-bezier(0.25, 1, 0.5, 1), width 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.tab-item {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 16px;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  transition: color 0.25s ease, transform 0.15s ease;
+  flex-shrink: 0;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.tab-item:not(.active) { color: var(--text-muted); }
+.tab-item.pressing { transform: scale(0.96); }
+
+/* ============================================================
+   КОНТЕНТ И СЕТКА КАРТОЧЕК
+   ============================================================ */
+.content-area {
+  flex: 1;
+  background-color: #1C1C1E;
+  position: relative;
+  z-index: 5;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  padding: 0 var(--side-inset) 110px var(--side-inset);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.content-area::-webkit-scrollbar { display: none; }
+
+.cards-grid {
+  display: none;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  padding-top: 148px;
+  padding-bottom: 0;
+}
+
+.cards-grid.visible { display: grid; }
+
+#favesGrid {
+  padding-top: calc(var(--capsule-top) + var(--capsule-height) + 8px);
+}
+
+/* ============================================================
+   КАРТОЧКИ
+   ============================================================ */
+.gift-card {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  perspective: 1400px;
+  overflow: visible;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.gift-card.flipped .card-inner { transform: rotateY(180deg); }
+
+.card-face {
+  width: 100%;
+  background-color: #2C2C2E;
+  border-radius: 20px;
+  padding: 8px;
+  border: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  isolation: isolate;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.card-front { position: relative; }
+
+.card-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  transform: rotateY(180deg);
+  justify-content: space-between;
+}
+
+.card-face .static-bg {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  height: 60%;
+  background-color: #464648;
+  border-radius: 14px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.card-back .static-bg { display: none; }
+
+.card-face > * {
+  position: relative;
+  z-index: 2;
+}
+
+.back-dividers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.back-dividers .divider {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 1px;
+  margin: 0;
+  background-color: var(--divider);
+}
+
+.back-dividers .divider:nth-child(1) { top: 20%; }
+.back-dividers .divider:nth-child(2) { top: 40%; }
+.back-dividers .divider:nth-child(3) { top: 60%; }
+.back-dividers .divider:nth-child(4) { top: 80%; }
+
+.image-container {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: #464648;
+  border-radius: 14px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.image-container.back-avatar {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 45px;
+  height: 45px;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background-color: #464648;
+  flex: none;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+  margin: 0;
+}
+
+.inner-circle {
+  width: 39.6px;
+  height: 39.6px;
+  border-radius: 50%;
+  background-color: #2C2C2E;
+  z-index: 2;
+}
+
+.card-back .action-container {
+  margin-top: auto;
+  margin-bottom: 0;
+}
+
+.cart-icon-large {
+  width: 50%;
+  height: 50%;
+  color: var(--text-secondary);
+  z-index: 2;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.badge {
+  position: absolute;
+  top: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 3;
+  background: rgba(255, 255, 255, 0.22) !important;
+  color: #ffffff;
+}
+
+.badge-heart { left: 6px; }
+.badge-cart { left: 36px; }
+.badge-send { left: 66px; }
+
+.badge-heart svg,
+.badge-cart svg,
+.badge-send svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+  stroke: none;
+}
+
+.badge-heart svg { fill: #ffffff; }
+
+.badge-cart svg,
+.badge-send svg {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#favesGrid .badge-cart { left: 6px; }
+#favesGrid .badge-send { left: 36px; }
+
+.info-container {
+  margin-top: 4px;
+  padding-left: 4px;
+  padding-bottom: 4px;
+}
+
+.title {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 2px 0;
+  letter-spacing: -0.2px;
+}
+
+.id-number {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.action-container {
+  margin-top: 4px;
+  display: flex;
+  gap: 4px;
+}
+
+.buy-button {
+  flex-grow: 1;
+  height: 34px;
+  background-color: #007aff;
+  border: none;
+  border-radius: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+}
+
+.buy-button:active { opacity: 0.85; }
+
+.price {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.price-icon {
+  width: 14px;
+  height: 14px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.cart-button {
+  width: 34px;
+  height: 34px;
+  background-color: #464648;
+  border: none;
+  border-radius: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.cart-button:active { background-color: #5a5a5c; }
+
+.cart-button svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon { fill: #ffffff; }
+
+.card-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 20;
+}
+
+/* ============================================================
+   SNOOP CARD
+   ============================================================ */
+.gift-card.snoop-card .card-face { padding: 4px; }
+
+.gift-card.snoop-card .card-front,
+.gift-card.snoop-card .card-back { justify-content: flex-start; }
+
+.gift-card.snoop-card .card-front .static-bg {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  height: auto;
+  border-radius: 16px;
+}
+
+.gift-card.snoop-card .card-back .static-bg { display: none; }
+
+.gift-card.snoop-card .image-container {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: transparent;
+  border-radius: 14px;
+  margin-bottom: 4px;
+}
+
+.gift-card.snoop-card .image-container.back-avatar {
+  width: 45px;
+  height: 45px;
+  margin: 0;
+  position: absolute;
+}
+
+.gift-card.snoop-card .back-dividers .divider {
+  left: 4px;
+  right: 4px;
+}
+
+.gift-card.snoop-card .info-container {
+  margin-top: 4px;
+  padding-left: 4px;
+  padding-right: 4px;
+  padding-bottom: 0;
+}
+
+.gift-card.snoop-card .action-container,
+.gift-card.snoop-card .card-back .action-container {
+  margin: 4px;
+  margin-top: auto;
+}
+
+.gift-card.snoop-card .badge { top: 4px; }
+.gift-card.snoop-card .badge-heart { left: 4px; }
+.gift-card.snoop-card .badge-cart { left: 34px; }
+.gift-card.snoop-card .badge-send { left: 64px; }
+
+#favesGrid .gift-card.snoop-card .badge-cart { left: 4px; }
+#favesGrid .gift-card.snoop-card .badge-send { left: 34px; }
+
+.gift-card.snoop-card .buy-button,
+.gift-card.snoop-card .cart-button { border-radius: 17px; }
+
+/* ============================================================
+   NEW CARD
+   ============================================================ */
+.gift-card.new-card .card-face { padding: 4px; }
+
+.gift-card.new-card .card-front,
+.gift-card.new-card .card-back { justify-content: flex-start; }
+
+.gift-card.new-card .card-front .static-bg {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  border-radius: 16px;
+}
+
+.gift-card.new-card .card-back .static-bg { display: none; }
+
+.gift-card.new-card .image-container {
+  width: calc(100% - 8px);
+  margin: 4px;
+  aspect-ratio: 1 / 1;
+  background-color: transparent;
+  border-radius: 12px;
+  margin-bottom: 4px;
+}
+
+.gift-card.new-card .image-container.back-avatar {
+  width: 45px;
+  height: 45px;
+  margin: 0;
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.gift-card.new-card .back-dividers .divider {
+  left: 4px;
+  right: 4px;
+}
+
+.gift-card.new-card .info-container {
+  margin-top: 4px;
+  padding: 0 4px 4px 4px;
+}
+
+.gift-card.new-card .action-container,
+.gift-card.new-card .card-back .action-container {
+  margin: 4px;
+  margin-top: auto;
+}
+
+.gift-card.new-card .badge { top: 4px; }
+.gift-card.new-card .badge-cart { left: 4px; }
+.gift-card.new-card .badge-send { left: 34px; }
+
+#favesGrid .gift-card.new-card .badge-cart { left: 4px; }
+#favesGrid .gift-card.new-card .badge-send { left: 34px; }
+
+.gift-card.new-card .buy-button,
+.gift-card.new-card .cart-button { border-radius: 17px; }
+
+/* ============================================================
+   ЭКРАНЫ
+   ============================================================ */
+.screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #1C1C1E;
+  z-index: 18;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.screen.visible { display: flex; }
+
+/* ============================================================
+   КАПСУЛА С ПАНЕЛЬЮ ДЕЙСТВИЙ (Faves / Cart)
+   ============================================================ */
+.capsule-wrapper {
+  position: absolute;
+  top: var(--capsule-top);
+  left: var(--panel-side);
+  right: var(--panel-side);
+  width: calc(100% - (var(--panel-side) * 2));
+  padding: var(--panel-pad);
+  z-index: 24;
+  will-change: transform;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stack-capsule {
+  width: 100%;
+  background-color: #2C2C2E;
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 20;
+  overflow: visible;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.stack-capsule-inner {
+  width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: #2C2C2E;
+}
+
+.tabs-row {
+  flex: 0 0 36px;
+  height: 36px;
+  padding: 3px 4px;
+  display: flex;
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto;
+}
+
+.tabs-row::-webkit-scrollbar { display: none; }
+
+.player-panel {
+  flex: 0 0 auto;
+  padding: 4px var(--panel-pad-x);
+  border-top: 1px solid var(--divider);
+  background-color: #2C2C2E;
+  height: 44px;
+}
+
+.player-panel.absolute-mode { position: relative; }
+
+.player-panel.flex-mode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.action-capsule {
+  height: 36px;
+  background-color: #2C2C2E;
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  padding: 3px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  min-width: max-content;
+  transition: background-color 0.2s ease, width var(--width-anim) var(--width-ease);
+  will-change: width;
+}
+
+.action-capsule:active { background-color: var(--active-bg); }
+
+#favesGlobalCapsule {
+  position: absolute;
+  left: var(--panel-pad-x);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#favesDeleteCapsule {
+  position: absolute;
+  right: var(--panel-pad-x);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.action-left {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.action-right {
+  color: var(--accent-red);
+  font-size: 15px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.count-badge {
+  color: var(--text-secondary);
+  font-weight: 400;
+  flex-shrink: 0;
+}
+
+.action-right .count-badge { color: rgba(255, 69, 58, 0.6); }
+
+.center-actions {
+  position: absolute;
+  right: calc(var(--panel-pad-x) + var(--delete-width) + var(--capsule-gap));
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  transition: right 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.center-btn {
+  width: var(--center-btn-size);
+  height: var(--center-btn-size);
+  background-color: #2C2C2E;
+  border: 1px solid var(--border-soft);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  color: #ffffff;
+  padding: 0;
+  outline: none;
+}
+
+.center-btn:active { background-color: var(--active-bg); }
+
+.center-btn svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+/* ============================================================
+   ЧЕКБОКС
+   ============================================================ */
+.check-circle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  border: 2px solid var(--text-secondary);
+  background-color: transparent;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+  cursor: pointer;
+}
+
+.check-circle.pressed { transform: scale(0.85); }
+
+.check-circle svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.gift-card.selected .check-circle,
+.item-card.selected .check-circle,
+.check-circle.selected {
+  background-color: var(--accent-blue);
+  border-color: var(--accent-blue);
+}
+
+.gift-card.selected .check-circle svg,
+.item-card.selected .check-circle svg,
+.check-circle.selected svg {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ============================================================
+   ВЫЕЗЖАЮЩЕЕ МЕНЮ (Faves)
+   ============================================================ */
+.menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translate(-50%, 0) scale(0.05);
+  transform-origin: top center;
+  width: max-content;
+  min-width: 220px;
+  background: rgba(44, 44, 46, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-soft);
+  border-radius: 22px;
+  padding: 6px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: default;
+  user-select: none;
+  z-index: 200;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.13s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0.13s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1),
+    filter 0.18s ease;
+  filter: blur(6px);
+  overflow: hidden;
+  isolation: isolate;
+  will-change: transform, opacity, filter;
+}
+
+.menu-panel.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(-50%, 0) scale(1);
+  filter: blur(0);
+}
+
+.menu-panel.closing {
+  opacity: 0;
+  visibility: visible;
+  pointer-events: none;
+  transform: translate(-50%, 0) scale(0.05);
+  filter: blur(5px);
+  transition:
+    opacity 0.13s cubic-bezier(0.4, 0, 1, 1),
+    visibility 0.13s cubic-bezier(0.4, 0, 1, 1),
+    transform 0.18s cubic-bezier(0.4, 0, 1, 1),
+    filter 0.13s ease;
+}
+
+.menu-highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-radius: 18px;
+  background-color: rgba(255, 255, 255, 0.10);
+  pointer-events: none;
+  z-index: 1;
+  transition:
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.18s ease;
+  opacity: 0;
+  will-change: transform, width, height;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.menu-highlight.visible { opacity: 1; }
+
+.menu-highlight.spring {
+  transition:
+    transform 0.32s cubic-bezier(0.34, 1.3, 0.64, 1),
+    width 0.32s cubic-bezier(0.34, 1.3, 0.64, 1),
+    height 0.32s cubic-bezier(0.34, 1.3, 0.64, 1),
+    opacity 0.18s ease;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 9px 14px;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  font-size: 15px;
+  font-weight: 400;
+  white-space: nowrap;
+  color: #ffffff;
+  position: relative;
+  z-index: 2;
+  background: transparent;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: layout style paint;
+}
+
+.menu-item svg {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+  pointer-events: none;
+  color: var(--text-muted);
+  transition: color 0.2s;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.menu-item:hover svg { color: #ffffff; }
+
+.menu-item span {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  display: inline-block;
+}
+
+.menu-item.delete,
+.menu-item.delete svg { color: var(--accent-red); }
+
+.menu-divider {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
+  margin: 4px 12px;
+  pointer-events: none;
+  position: relative;
+  z-index: 2;
+  transform: translateZ(0);
+}
+
+/* ============================================================
+   CART
+   ============================================================ */
+.cart-screen {
+  padding-bottom: calc(var(--nav-bottom) + var(--nav-height) + 10px);
+}
+
+.items-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  padding-top: calc(var(--capsule-top) + var(--capsule-height) + 8px);
+}
+
+.items-list::-webkit-scrollbar { display: none; }
+
+.item-card {
+  display: flex;
+  align-items: stretch;
+  background-color: #2C2C2E;
+  border-radius: 20px;
+  padding: 3px;
+  gap: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.item-card.pressed {
+  background-color: #343436;
+  transform: scale(0.98);
+}
+
+.item-image {
+  width: 100px;
+  min-height: 100px;
+  align-self: stretch;
+  border-radius: 16px;
+  background-color: #464648;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 48px;
+}
+
+.item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 9px 9px 9px 0;
+  justify-content: center;
+  min-width: 0;
+}
+
+.item-title {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.item-id {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.price-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.item-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--bg-element);
+  padding: 6px 12px;
+  border-radius: 15px;
+  flex-shrink: 0;
+}
+
+.item-price .price-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.price-value {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--bg-element);
+  border: 1px solid var(--border-soft);
+  border-radius: 15px;
+  width: 96px;
+  height: 30px;
+  padding: 0 2px;
+  flex-shrink: 0;
+}
+
+.qty-btn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 16px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.qty-value {
+  position: relative;
+  width: 32px;
+  height: 20px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qty-digit {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  will-change: transform, opacity;
+}
+
+.qty-digit.slide-up { animation: slideUp 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.qty-digit.slide-down { animation: slideDown 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.qty-digit.enter-up { animation: enterUp 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.qty-digit.enter-down { animation: enterDown 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+@keyframes slideUp {
+  to { transform: translateY(-100%); opacity: 0; }
+}
+
+@keyframes slideDown {
+  to { transform: translateY(100%); opacity: 0; }
+}
+
+@keyframes enterUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes enterDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.item-checkbox {
+  align-self: flex-start;
+  margin-top: 8px;
+  margin-right: 8px;
+}
+
+.payment-footer {
+  padding: 16px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.error-text {
+  text-align: center;
+  color: var(--accent-red);
+  font-size: 15px;
+}
+
+.pay-button {
+  width: 100%;
+  height: 56px;
+  background-color: var(--accent-blue);
+  border: none;
+  border-radius: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.pay-button:active { opacity: 0.8; }
+
+.pay-button.disabled {
+  background-color: #2C2C2E;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.pay-button-title {
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.pay-button-subtitle {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ============================================================
+   CHATS
+   ============================================================ */
+.chats-panel {
+  flex: 1;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-top: 148px;
+  padding-bottom: 110px;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chats-panel::-webkit-scrollbar { display: none; }
+
+.tg-chat-item {
+  display: flex;
+  padding: 10px 16px;
+  gap: 12px;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.tg-chat-item:active { background-color: rgba(255, 255, 255, 0.05); }
+
+.tg-chat-item + .tg-chat-item {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.avatar-wrapper {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+}
+
+.avatar-bg {
+  width: 100%;
+  height: 100%;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-badge {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  width: 28px;
+  height: 28px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-soft);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 0 0 0 2px #1C1C1E, 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.avatar-badge svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+  fill: #ffffff;
+}
+
+.tg-chat-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tg-chat-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tg-chat-name {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.verified {
+  width: 14px;
+  height: 14px;
+  background-color: var(--tg-blue);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.tg-chat-time {
+  color: var(--text-secondary);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.tg-chat-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.tg-chat-msg {
+  color: var(--text-muted);
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tg-chat-msg.pinned { color: #ffffff; }
+
+.pin-icon {
+  width: 21px;
+  height: 21px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  display: block;
+  margin-left: 2px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.unread-badge {
+  background-color: var(--active-bg);
+  color: #ffffff;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   НИЖНЯЯ ПАНЕЛЬ
+   ============================================================ */
+.nav-bar {
+  position: absolute;
+  bottom: var(--nav-bottom);
+  left: var(--side-inset);
+  right: calc(var(--side-inset) + var(--nav-height) + var(--nav-gap));
+  display: flex;
+  align-items: center;
+  background-color: rgba(44, 44, 46, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--nav-radius);
+  padding: 3px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-soft);
+  z-index: 30;
+  height: var(--nav-height);
+}
+
+.nav-backdrop {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  height: calc(100% - 6px);
+  width: calc((100% - 6px - (var(--nav-gap) * 3)) / 4);
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: calc(var(--nav-radius) - 2px);
+  z-index: 1;
+  opacity: 1;
+  will-change: transform, opacity;
+  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s ease, background-color 0.3s ease;
+  pointer-events: none;
+}
+
+.nav-item-new {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: var(--text-secondary);
+  padding: 10px 0;
+  cursor: pointer;
+  z-index: 2;
+  transition: color 0.3s ease, transform 0.2s ease;
+  margin-right: var(--nav-gap);
+}
+
+.nav-item-new:last-child { margin-right: 0; }
+
+.nav-item-new span {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  transition: color 0.3s ease, font-weight 0.3s ease;
+}
+
+.avatar-container {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  margin-bottom: 5px;
+}
+
+.avatar-icon {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.avatar-icon::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  transition: background 0.3s ease;
+}
+
+.black-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 5px;
+  height: 5px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+  z-index: 3;
+  pointer-events: none;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.nav-item-new.active { color: #2f80ed; }
+
+.nav-item-new.active span {
+  color: #2f80ed;
+  font-weight: 600;
+}
+
+.nav-item-new.active .avatar-icon::after { background: rgba(47, 128, 237, 0.15); }
+
+.nav-item-new.active .black-dot {
+  background-color: #2f80ed;
+  box-shadow: 0 0 6px rgba(47, 128, 237, 0.8);
+}
+
+.nav-item-new:hover .avatar-icon { transform: scale(1.05); }
+
+/* ============================================================
+   КНОПКА ПРОФИЛЯ
+   ============================================================ */
+.profile-button {
+  position: absolute;
+  bottom: var(--nav-bottom);
+  right: var(--side-inset);
+  width: var(--nav-height);
+  height: var(--nav-height);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 30;
+  user-select: none;
+  padding: 0;
+  background-color: rgba(44, 44, 46, 0.85);
+  border: 1px solid var(--border-soft);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.major-coin-button {
+  width: calc(var(--nav-height) - 12px);
+  height: calc(var(--nav-height) - 12px);
+  border-radius: 50%;
+  background: linear-gradient(to bottom, #ffd175 0%, #ff9743 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: box-shadow 0.28s cubic-bezier(0.25, 1, 0.5, 1);
+  box-shadow:
+    0 0 0 0 rgba(44, 44, 46, 0),
+    0 0 0 0 rgba(47, 128, 237, 0),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.profile-button.active .major-coin-button {
+  box-shadow:
+    0 0 0 3px rgba(44, 44, 46, 1),
+    0 0 0 6px rgba(47, 128, 237, 1),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.major-coin-symbol {
+  color: #ffffff;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================================
+   ПРОФИЛЬ (НАСТРОЙКИ)
+   ============================================================ */
+.profile-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #1C1C1E;
+  z-index: 20;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  --scroll-bg: #1C1C1E;
+  --card-bg: #2C2C2E;
+  --radius-strong: 999px;
+  --radius-soft: 20px;
+  --radius-icon: 10px;
+  --divider-color: rgba(255, 255, 255, 0.08);
+  --text-secondary: #8e8e93;
+  --accent-blue: #0a84ff;
+}
+
+.profile-screen.visible { display: flex; }
+
+.profile-screen .profile-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  padding-bottom: 110px;
+  background-color: var(--scroll-bg);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  width: 100%;
+}
+
+.profile-screen .profile-scroll::-webkit-scrollbar { display: none; }
+
+.profile-screen .info-section {
+  background-color: var(--scroll-bg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.profile-screen .top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  margin-bottom: 10px;
+}
+
+.profile-screen .nav-btn {
+  background-color: var(--card-bg);
+  border: none;
+  color: #ffffff;
+  border-radius: var(--radius-strong);
+  padding: 10px 16px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.profile-screen .nav-btn:active {
+  transform: scale(0.96);
+  background-color: #343436;
+}
+
+.profile-screen .icon-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background-color: var(--card-bg);
+  border-radius: var(--radius-strong);
+  color: #ffffff;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.profile-screen .icon-btn:active {
+  transform: scale(0.96);
+  background-color: #343436;
+}
+
+.profile-screen .profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: -10px;
+  margin-bottom: 10px;
+}
+
+.profile-screen .profile-avatar-large {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: var(--card-bg);
+  margin-bottom: 12px;
+}
+
+.profile-screen .profile-name-large {
+  font-size: 28px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.1;
+  margin-bottom: 2px;
+}
+
+.profile-screen .profile-username {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  align-self: center;
+}
+
+.profile-screen .card {
+  background-color: var(--card-bg);
+  border-radius: var(--radius-soft);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  width: 100%;
+}
+
+.profile-screen .card-capsule { border-radius: var(--radius-strong) !important; }
+
+.profile-screen .card-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  gap: 16px;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  width: 100%;
+}
+
+.profile-screen .card-item:active { background-color: #343436; }
+
+.profile-screen .card-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 64px;
+  right: 0;
+  height: 0.5px;
+  background-color: var(--divider-color);
+}
+
+.profile-screen .icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-icon);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.profile-screen .icon-box.red { background: linear-gradient(180deg, #ff6b6b 0%, #ff453a 100%); }
+.profile-screen .icon-box.blue { background: linear-gradient(180deg, #54a9ff 0%, #0a84ff 100%); }
+.profile-screen .icon-box.green { background: linear-gradient(180deg, #4cd964 0%, #32d74b 100%); }
+.profile-screen .icon-box.orange { background: linear-gradient(180deg, #ffcc00 0%, #ff9f0a 100%); }
+.profile-screen .icon-box.lightblue { background: linear-gradient(180deg, #5ac8fa 0%, #0a84ff 100%); }
+.profile-screen .icon-box.purple { background: linear-gradient(180deg, #a284ff 0%, #7c5cff 100%); }
+.profile-screen .icon-box.yellow { background: linear-gradient(180deg, #ffd54f 0%, #ffb300 100%); }
+.profile-screen .icon-box.pink { background: linear-gradient(180deg, #ff8a9d 0%, #ff4b68 100%); }
+.profile-screen .icon-box.cyan { background: linear-gradient(180deg, #65d2e9 0%, #1cc6e6 100%); }
+.profile-screen .icon-box.grey { background: linear-gradient(180deg, #a6a6ad 0%, #7c7c85 100%); }
+
+.profile-screen .item-text {
+  font-size: 17px;
+  font-weight: 400;
+  flex: 1;
+}
+
+.profile-screen .badge-count {
+  color: var(--text-secondary);
+  font-size: 16px;
+  margin-right: 4px;
+}
+
+.profile-screen .chevron {
+  width: 8px;
+  height: 14px;
+  fill: none;
+  stroke: var(--text-secondary);
+  stroke-width: 2.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+.profile-screen .btn-accent {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  gap: 16px;
+  cursor: pointer;
+  color: var(--accent-blue);
+  transition: background-color 0.15s ease;
+}
+
+.profile-screen .btn-accent:active { background-color: #343436; }
+
+.profile-screen .group-title {
+  padding: 0 4px;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  margin-top: 4px;
+  margin-bottom: -8px;
+}
+
+/* ============================================================
+   MY SHOP
+   ============================================================ */
+.shop-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #1C1C1E;
+  z-index: 28;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  transform: translateX(100%) scale(0.92);
+  transform-origin: top right;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.32s ease;
+}
+
+.shop-screen.visible {
+  transform: translateX(0) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.shop-scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  width: 100%;
+  padding-bottom: 110px;
+}
+
+.shop-scroll-container::-webkit-scrollbar { display: none; }
+
+.shop-header-section {
+  background: linear-gradient(180deg, #5288a8 0%, #3b6583 100%);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+  z-index: 10;
+  transition: padding 0.3s ease, background 0.3s ease;
+  width: 100%;
+}
+
+.shop-header-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 10l-15 10 15 10 15-10-15-10zm0 15l-10-6.6 10-6.6 10 6.6-10 6.6z' fill='%23ffffff' fill-opacity='0.06'/%3E%3C/svg%3E");
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.shop-header-section.collapsed {
+  padding: 8px 16px;
+  background: #2C2C2E;
+}
+
+.shop-header-section.collapsed::before { opacity: 0; }
+
+.shop-header-section.collapsed .shop-avatar-container,
+.shop-header-section.collapsed .shop-channel-username,
+.shop-header-section.collapsed .shop-action-buttons,
+.shop-header-section.collapsed .shop-edit-button,
+.shop-header-section.collapsed .shop-back-button {
+  opacity: 0;
+  height: 0;
+  width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border: none;
+}
+
+.shop-avatar-container,
+.shop-channel-username,
+.shop-action-buttons,
+.shop-edit-button,
+.shop-back-button {
+  transition: opacity 0.25s ease, height 0.3s ease, width 0.3s ease, margin 0.3s ease, padding 0.3s ease;
+  overflow: hidden;
+}
+
+.shop-channel-title {
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 1;
+  margin-bottom: 4px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: font-size 0.3s ease, margin 0.3s ease;
+}
+
+.shop-header-section.collapsed .shop-channel-title {
+  font-size: 18px;
+  margin-bottom: 0;
+}
+
+.shop-back-button {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 42px;
+  height: 42px;
+  background-color: rgba(23, 33, 43, 0.55);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: background-color 0.3s ease, opacity 0.25s ease, transform 0.2s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.shop-back-button:active { transform: scale(0.95); }
+
+.shop-back-button svg {
+  width: 22px;
+  height: 22px;
+  fill: #ffffff;
+  margin-left: -2px;
+}
+
+.shop-edit-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  height: 42px;
+  padding: 0 18px;
+  background-color: rgba(23, 33, 43, 0.55);
+  border-radius: 21px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: background-color 0.3s ease, transform 0.1s ease, opacity 0.25s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+  user-select: none;
+}
+
+.shop-edit-button:active { transform: scale(0.95); }
+
+.shop-avatar-container {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background-color: #62a9dd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  margin-bottom: 12px;
+  z-index: 1;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.shop-avatar-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%);
+}
+
+.shop-avatar-container svg {
+  width: 65px;
+  height: 65px;
+  z-index: 1;
+}
+
+.shop-verified-badge {
+  width: 18px;
+  height: 18px;
+  fill: #ffffff;
+  flex-shrink: 0;
+}
+
+.shop-channel-username {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  z-index: 1;
+  text-decoration: none;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+
+.shop-action-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 100%;
+  margin-top: 20px;
+  z-index: 1;
+}
+
+.shop-action-btn {
+  background-color: rgba(23, 33, 43, 0.55);
+  border-radius: 12px;
+  padding: 10px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+  min-height: 56px;
+}
+
+.shop-action-btn:active { transform: scale(0.97); }
+
+.shop-action-btn svg {
+  width: 22px;
+  height: 22px;
+  fill: #ffffff;
+}
+
+.shop-stat-number {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.shop-stat-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.shop-info-section {
+  background-color: #1C1C1E;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.shop-info-card {
+  background-color: #2C2C2E;
+  border-radius: 20px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-soft);
+  width: 100%;
+}
+
+.shop-info-label {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  text-transform: lowercase;
+}
+
+.shop-info-text {
+  color: #ffffff;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.shop-info-text a {
+  color: #007aff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.shop-bottom-categories-wrapper {
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.shop-scroll-capsule {
+  width: 100%;
+  height: 44px;
+  background-color: #2C2C2E;
+  border: 1px solid var(--border-soft);
+  border-radius: 22px;
+  padding: 4px;
+  display: flex;
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.shop-scroll-capsule::-webkit-scrollbar { display: none; }
+
+.shop-active-bg {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  width: 0;
+  background-color: var(--active-bg);
+  border-radius: 18px;
+  z-index: 1;
+  pointer-events: none;
+  transition: left 0.35s cubic-bezier(0.25, 1, 0.5, 1), width 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.shop-tab-item {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 18px;
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  transition: color 0.25s ease;
+  flex-shrink: 0;
+  border-radius: 18px;
+}
+
+.shop-tab-item:not(.active) { color: var(--text-secondary); }
+
+.shop-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  flex-shrink: 0;
+  padding-bottom: 10px;
+  width: 100%;
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     СПРАЙТ ИКОНОК
+     ============================================================ -->
+<svg class="svg-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <symbol id="i-basket" viewBox="0 0 24 24">
+    <path d="M2.5 8.5h19l-1.164 6.986c-.4 2.395-.599 3.592-1.438 4.303-.84.711-2.053.711-4.48.711H9.582c-2.428 0-3.642 0-4.48-.71-.84-.712-1.04-1.91-1.439-4.304zm9.5 4v4m4-4v4m-8-4v4m14.5-8h-21m16.5 0l-3-5m-9 5l3-5"/>
+  </symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24">
+    <path d="M14 16H19V21M10 8H5V3M19.4176 9.0034C18.8569 7.61566 17.9181 6.41304 16.708 5.53223C15.4979 4.65141 14.0652 4.12752 12.5723 4.02051C11.0794 3.9135 9.58606 4.2274 8.2627 4.92661C6.93933 5.62582 5.83882 6.68254 5.08594 7.97612M4.58203 14.9971C5.14272 16.3848 6.08146 17.5874 7.29157 18.4682C8.50169 19.3491 9.93588 19.8723 11.4288 19.9793C12.9217 20.0863 14.4138 19.7725 15.7371 19.0732C17.0605 18.374 18.1603 17.3175 18.9131 16.0239"/>
+  </symbol>
+  <symbol id="i-ton" viewBox="0 0 100 100">
+    <path fill="#30A1F5" d="M66.523 11.333H33.477c-4.401 0-6.601 0-8.592.616a13.8 13.8 0 0 0-4.808 2.625c-1.594 1.341-2.784 3.192-5.164 6.894L4.408 37.81c-1.572 2.446-2.358 3.67-2.572 4.956a6.3 6.3 0 0 0 .362 3.37c.482 1.212 1.51 2.24 3.567 4.296l39.033 39.034c1.821 1.82 2.731 2.731 3.781 3.072a4.6 4.6 0 0 0 2.842 0c1.05-.34 1.96-1.251 3.78-3.072l39.035-39.034c2.056-2.056 3.084-3.084 3.566-4.296a6.3 6.3 0 0 0 .362-3.37c-.214-1.287-1-2.51-2.572-4.956L85.087 21.47c-2.38-3.703-3.57-5.554-5.164-6.895a13.8 13.8 0 0 0-4.808-2.625c-1.99-.616-4.191-.616-8.592-.616z"/>
+    <path fill="#ffffff" d="M60.268 24.224c.537-1.45 2.59-1.45 3.126 0l3.71 10.027a2.2 2.2 0 0 0 1.3 1.3l10.027 3.71c1.451.537 1.451 2.59 0 3.126l-10.027 3.71a2.2 2.2 0 0 0-1.3 1.3l-3.71 10.027c-.537 1.451-2.59 1.451-3.126 0l-3.71-10.027a2.2 2.2 0 0 0-1.3-1.3l-10.027-3.71c-1.451-.537-1.451-2.589 0-3.126l10.027-3.71a2.2 2.2 0 0 0 1.3-1.3z"/>
+  </symbol>
+  <symbol id="i-triangle" viewBox="0 0 24 24">
+    <path d="M12 2L2 22h20L12 2zm0 4.25L18.4 19H5.6L12 6.25z"/>
+  </symbol>
+  <symbol id="i-share" viewBox="0 0 24 24">
+    <circle cx="18" cy="5" r="3"/>
+    <circle cx="6" cy="12" r="3"/>
+    <circle cx="18" cy="19" r="3"/>
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+  </symbol>
+  <symbol id="i-send" viewBox="0 0 24 24">
+    <path d="M9 12C9 13.3807 7.88071 14.5 6.5 14.5C5.11929 14.5 4 13.3807 4 12C4 10.6193 5.11929 9.5 6.5 9.5C7.88071 9.5 9 10.6193 9 12Z"/>
+    <path d="M14 6.5L9 10"/>
+    <path d="M14 17.5L9 14"/>
+    <path d="M19 18.5C19 19.8807 17.8807 21 16.5 21C15.1193 21 14 19.8807 14 18.5C14 17.1193 15.1193 16 16.5 16C17.8807 16 19 17.1193 19 18.5Z"/>
+    <path d="M19 5.5C19 6.88071 17.8807 8 16.5 8C15.1193 8 14 6.88071 14 5.5C14 4.11929 15.1193 3 16.5 3C17.8807 3 19 4.11929 19 5.5Z"/>
+  </symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24">
+    <path d="M9 3L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-3.17L15 3H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+  </symbol>
+  <symbol id="i-paperclip" viewBox="0 0 24 24">
+    <path d="M15.6716 6.8536L8.0126 14.5125C7.3292 15.1959 7.3292 16.304 8.0126 16.9874C8.696 17.6708 9.8041 17.6708 10.4875 16.9874L18.5 8.9749C19.8668 7.608 19.8668 5.392 18.5 4.0251C17.1332 2.6583 14.9171 2.6583 13.5503 4.0251L5.5377 12.0377C3.4875 14.0879 3.4874 17.4119 5.5377 19.4623C7.5881 21.5126 10.9121 21.5125 12.9623 19.4623L20 12.4246"/>
+  </symbol>
+  <symbol id="i-search" viewBox="0 0 24 24">
+    <circle cx="11" cy="11" r="8"/>
+    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </symbol>
+  <symbol id="i-check" viewBox="0 0 24 24">
+    <polyline points="20 6 9 17 4 12"/>
+  </symbol>
+  <symbol id="i-sort" viewBox="0 0 24 24">
+    <path fill="currentColor" stroke="none" fill-rule="evenodd" clip-rule="evenodd" d="M3 7C3 6.44772 3.44772 6 4 6H20C20.5523 6 21 6.44772 21 7C21 7.55228 20.5523 8 20 8H4C3.44772 8 3 7.55228 3 7ZM6 12C6 11.4477 6.44772 11 7 11H17C17.5523 11 18 11.4477 18 12C18 12.5523 17.5523 13 17 13H7C6.44772 13 6 12.5523 6 12ZM9 17C9 16.4477 9.44772 16 10 16H14C14.5523 16 15 16.4477 15 17C15 17.5523 14.5523 18 14 18H10C9.44772 18 9 17.5523 9 17Z"/>
+  </symbol>
+</svg>
+
+<div class="chat-container">
+
+  <!-- ============================================================
+       ОБЩАЯ ШАПКА
+       ============================================================ -->
+  <div class="floating-panel edit-panel visible" id="editPanel">
+    <button class="btn-edit">Изм.</button>
+  </div>
+
+  <div class="floating-panel title-panel visible" id="titlePanel">
+    <h1 class="header-title">Shopnet</h1>
+  </div>
+
+  <div class="floating-panel buttons-panel visible" id="buttonsPanel">
+    <div class="right-capsule">
+      <button class="icon-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round">
+          <circle cx="12" cy="12" r="9"/>
+          <line x1="12" y1="8" x2="12" y2="16"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
+        </svg>
+      </button>
+      <button class="icon-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 20h9"/>
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          <line x1="10" y1="12" x2="14" y2="8"/>
+          <line x1="8" y1="14" x2="12" y2="10"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="floating-panel search-panel visible" id="searchPanel">
+    <div class="search-wrapper">
+      <div class="search-placeholder">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><use href="#i-search"/></svg>
+        <span>Поиск</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       HOME
+       ============================================================ -->
+  <div class="floating-panel categories-panel visible" id="categoriesPanel">
+    <div class="scroll-capsule" id="scrollCapsule">
+      <div class="active-bg" id="activeBg"></div>
+      <div class="tab-item active" onclick="setActiveCategory(this)">Все</div>
+      <div class="tab-item" onclick="setActiveCategory(this)">My Chats</div>
+      <div class="tab-item" onclick="setActiveCategory(this)">TON Devs</div>
+      <div class="tab-item" onclick="setActiveCategory(this)">BotsCreators</div>
+      <div class="tab-item" onclick="setActiveCategory(this)">Crypto</div>
+      <div class="tab-item" onclick="setActiveCategory(this)">Lists</div>
+      <div class="tab-item" onclick="setActiveCategory(this)">Contact</div>
+      <div class="tab-item" onclick="setActiveCategory(this)">Jetton</div>
+    </div>
+  </div>
+
+  <div class="content-area" id="contentArea">
+    <div class="cards-grid visible" id="cardsGrid">
+
+      <!-- HOME карточка 1: SNOOP DOGG -->
+      <div class="gift-card snoop-card">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="static-bg"></div>
+            <div class="image-container">
+              <svg class="cart-icon-large" viewBox="0 0 24 24"><use href="#i-basket"/></svg>
+              <div class="badge badge-heart"><svg viewBox="0 0 24 24"><use href="#i-share"/></svg></div>
+              <div class="badge badge-cart"><svg viewBox="0 0 24 24"><use href="#i-basket"/></svg></div>
+              <div class="badge badge-send"><svg viewBox="0 0 24 24"><use href="#i-send"/></svg></div>
+            </div>
+            <div class="info-container">
+              <h3 class="title">Snoop Dogg</h3>
+              <span class="id-number">#557730</span>
+            </div>
+            <div class="action-container">
+              <button class="buy-button">
+                <span class="price">8.97</span>
+                <svg class="icon" width="14" height="14" viewBox="0 0 24 24"><use href="#i-triangle"/></svg>
+              </button>
+              <button class="cart-button" onclick="flipCard(this)">
+                <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="card-face card-back">
+            <div class="static-bg"></div>
+            <div class="image-container back-avatar"><div class="inner-circle"></div></div>
+            <div class="back-dividers">
+              <div class="divider"></div>
+              <div class="divider"></div>
+              <div class="divider"></div>
+              <div class="divider"></div>
+            </div>
+            <div class="action-container">
+              <button class="buy-button">
+                <span class="price">8.97</span>
+                <svg class="icon" width="14" height="14" viewBox="0 0 24 24"><use href="#i-triangle"/></svg>
+              </button>
+              <button class="cart-button" onclick="flipCard(this)">
+                <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOME карточка 2: PIKACHU -->
+      <div class="gift-card new-card">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="static-bg"></div>
+            <div class="image-container">
+              <svg class="cart-icon-large" viewBox="0 0 24 24"><use href="#i-basket"/></svg>
+            </div>
+            <div class="info-container">
+              <h3 class="title">Pikachu</h3>
+              <span class="id-number">#001234</span>
+            </div>
+            <div class="action-container">
+              <button class="buy-button">
+                <span class="price">12.50</span>
+                <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+              </button>
+              <button class="cart-button" onclick="flipCard(this)">
+                <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="card-face card-back">
+            <div class="static-bg"></div>
+            <div class="image-container back-avatar"><div class="inner-circle"></div></div>
+            <div class="back-dividers">
+              <div class="divider"></div>
+              <div class="divider"></div>
+              <div class="divider"></div>
+              <div class="divider"></div>
+            </div>
+            <div class="action-container">
+              <button class="buy-button">
+                <span class="price">12.50</span>
+                <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+              </button>
+              <button class="cart-button" onclick="flipCard(this)">
+                <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOME карточка 3: ALIEN -->
+      <div class="gift-card new-card">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="static-bg"></div>
+            <div class="image-container">
+              <svg class="cart-icon-large" viewBox="0 0 24 24"><use href="#i-basket"/></svg>
+            </div>
+            <div class="info-container">
+              <h3 class="title">Alien</h3>
+              <span class="id-number">#998877</span>
+            </div>
+            <div class="action-container">
+              <button class="buy-button">
+                <span class="price">5.20</span>
+                <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+              </button>
+              <button class="cart-button" onclick="flipCard(this)">
+                <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="card-face card-back">
+            <div class="static-bg"></div>
+            <div class="image-container back-avatar"><div class="inner-circle"></div></div>
+            <div class="back-dividers">
+              <div class="divider"></div>
+              <div class="divider"></div>
+              <div class="divider"></div>
+              <div class="divider"></div>
+            </div>
+            <div class="action-container">
+              <button class="buy-button">
+                <span class="price">5.20</span>
+                <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+              </button>
+              <button class="cart-button" onclick="flipCard(this)">
+                <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOME карточка 4: PRINCESS -->
+      <div class="gift-card new-card">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="static-bg"></div>
+            <div class="image-container">
+              <svg class="cart-icon-large" viewBox="0 0 24 24"><use href="#i-basket"/></svg>
+            </div>
+            <div class="info-container">
+              <h3 class="title">Princess</h3>
+              <span class="id-number">#445566</span>
+            </div>
+            <div class="action-container">
+              <button class="buy-button">
+                <span class="price">15.99</span>
+                <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+              </button>
+              <button class="cart-button" onclick="flipCard(this)">
+                <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="card-face card-back">
+            <div class="static-bg"></div>
+            <div class="image-container back-avatar"><div class="inner-circle"></div></div>
+            <div class="back-dividers">
+              <div class="divider"></div>
+              <div class="divider"></div>
+              <div class="divider"></div>
+              <div class="divider"></div>
+            </div>
+            <div class="action-container">
+              <button class="buy-button">
+                <span class="price">15.99</span>
+                <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+              </button>
+              <button class="cart-button" onclick="flipCard(this)">
+                <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================
+       FAVES
+       ============================================================ -->
+  <div class="screen" id="favesScreen">
+
+    <div class="capsule-wrapper" id="favesCapsuleWrapper">
+      <div class="stack-capsule" id="favesStackCapsule">
+        <div class="stack-capsule-inner">
+
+          <div class="tabs-row" id="favesTabsRow">
+            <div class="active-bg" id="favesActiveBg"></div>
+            <div class="tab-item active" data-category="all">Все</div>
+            <div class="tab-item" data-category="mychats">My Chats</div>
+            <div class="tab-item" data-category="tondevs">TON Devs</div>
+            <div class="tab-item" data-category="bots">BotsCreators</div>
+            <div class="tab-item" data-category="crypto">Crypto</div>
+            <div class="tab-item" data-category="lists">Lists</div>
+            <div class="tab-item" data-category="contact">Contact</div>
+            <div class="tab-item" data-category="jetton">Jetton</div>
+          </div>
+
+          <div class="player-panel absolute-mode" id="favesPlayerPanel">
+            <div class="action-capsule" id="favesGlobalCapsule" onclick="favesToggleAll()">
+              <div class="action-left">
+                <div class="check-circle" id="favesGlobalCheck">
+                  <svg viewBox="0 0 24 24"><use href="#i-check"/></svg>
+                </div>
+                <span id="favesActionText">Снять выделение</span>
+                <span class="count-badge" id="favesSelectedCount">· 4</span>
+              </div>
+            </div>
+
+            <div class="center-actions">
+              <button class="center-btn" id="sortBtn" aria-label="Сортировка">
+                <svg viewBox="0 0 24 24"><use href="#i-sort"/></svg>
+              </button>
+            </div>
+
+            <div class="action-capsule" id="favesDeleteCapsule">
+              <div class="action-right">
+                <span>Удалить</span>
+                <span class="count-badge" id="favesDeleteCount">· 4</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="menu-panel" id="menuPanel">
+          <div class="menu-highlight" id="menuHighlight"></div>
+
+          <div class="menu-item" data-index="0">
+            <svg viewBox="0 0 24 24">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            <span>Настроить папку</span>
+          </div>
+          <div class="menu-item" data-index="1">
+            <svg viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Добавить чаты</span>
+          </div>
+          <div class="menu-item" data-index="2">
+            <svg viewBox="0 0 24 24">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span>Вкл. уведомления</span>
+          </div>
+          <div class="menu-item" data-index="3">
+            <svg viewBox="0 0 24 24">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+            <span>Поделиться</span>
+          </div>
+          <div class="menu-item delete" data-index="4">
+            <svg viewBox="0 0 24 24">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+            <span>Удалить</span>
+          </div>
+          <div class="menu-divider"></div>
+          <div class="menu-item" data-index="5">
+            <svg viewBox="0 0 24 24">
+              <path d="M22 11V17C22 21 21 22 17 22H7C3 22 2 21 2 17V7C2 3 3 2 7 2H8.5C10 2 10.33 2.44 10.9 3.2L12.4 5.2C12.78 5.7 13 6 14 6H17C21 6 22 7 22 11Z" stroke-width="1.5" stroke-miterlimit="10"></path>
+            </svg>
+            <span>Добавить папку</span>
+          </div>
+          <div class="menu-item" data-index="6">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+              <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+              <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+              <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+              <path d="M10 6.5h4"></path>
+              <path d="M6.5 10v4"></path>
+            </svg>
+            <span>Изменить порядок</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="content-area" id="favesContent">
+      <div class="cards-grid visible" id="favesGrid">
+
+        <!-- FAVES карточка 1: SNOOP DOGG -->
+        <div class="gift-card snoop-card selected">
+          <div class="card-check" onmousedown="favesCheckPress(this, event)" onclick="favesCheckClick(this, event)">
+            <div class="check-circle">
+              <svg viewBox="0 0 24 24"><use href="#i-check"/></svg>
+            </div>
+          </div>
+          <div class="card-inner">
+            <div class="card-face card-front">
+              <div class="static-bg"></div>
+              <div class="image-container">
+                <svg class="cart-icon-large" viewBox="0 0 24 24"><use href="#i-basket"/></svg>
+                <div class="badge badge-cart"><svg viewBox="0 0 24 24"><use href="#i-basket"/></svg></div>
+                <div class="badge badge-send"><svg viewBox="0 0 24 24"><use href="#i-send"/></svg></div>
+              </div>
+              <div class="info-container">
+                <h3 class="title">Snoop Dogg</h3>
+                <span class="id-number">#557730</span>
+              </div>
+              <div class="action-container">
+                <button class="buy-button">
+                  <span class="price">8.97</span>
+                  <svg class="icon" width="14" height="14" viewBox="0 0 24 24"><use href="#i-triangle"/></svg>
+                </button>
+                <button class="cart-button" onclick="flipCard(this)">
+                  <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="card-face card-back">
+              <div class="static-bg"></div>
+              <div class="image-container back-avatar"><div class="inner-circle"></div></div>
+              <div class="back-dividers">
+                <div class="divider"></div>
+                <div class="divider"></div>
+                <div class="divider"></div>
+                <div class="divider"></div>
+              </div>
+              <div class="action-container">
+                <button class="buy-button">
+                  <span class="price">8.97</span>
+                  <svg class="icon" width="14" height="14" viewBox="0 0 24 24"><use href="#i-triangle"/></svg>
+                </button>
+                <button class="cart-button" onclick="flipCard(this)">
+                  <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAVES карточка 2: PIKACHU -->
+        <div class="gift-card new-card selected">
+          <div class="card-check" onmousedown="favesCheckPress(this, event)" onclick="favesCheckClick(this, event)">
+            <div class="check-circle">
+              <svg viewBox="0 0 24 24"><use href="#i-check"/></svg>
+            </div>
+          </div>
+          <div class="card-inner">
+            <div class="card-face card-front">
+              <div class="static-bg"></div>
+              <div class="image-container">
+                <svg class="cart-icon-large" viewBox="0 0 24 24"><use href="#i-basket"/></svg>
+              </div>
+              <div class="info-container">
+                <h3 class="title">Pikachu</h3>
+                <span class="id-number">#001234</span>
+              </div>
+              <div class="action-container">
+                <button class="buy-button">
+                  <span class="price">12.50</span>
+                  <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+                </button>
+                <button class="cart-button" onclick="flipCard(this)">
+                  <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="card-face card-back">
+              <div class="static-bg"></div>
+              <div class="image-container back-avatar"><div class="inner-circle"></div></div>
+              <div class="back-dividers">
+                <div class="divider"></div>
+                <div class="divider"></div>
+                <div class="divider"></div>
+                <div class="divider"></div>
+              </div>
+              <div class="action-container">
+                <button class="buy-button">
+                  <span class="price">12.50</span>
+                  <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+                </button>
+                <button class="cart-button" onclick="flipCard(this)">
+                  <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAVES карточка 3: ALIEN -->
+        <div class="gift-card new-card selected">
+          <div class="card-check" onmousedown="favesCheckPress(this, event)" onclick="favesCheckClick(this, event)">
+            <div class="check-circle">
+              <svg viewBox="0 0 24 24"><use href="#i-check"/></svg>
+            </div>
+          </div>
+          <div class="card-inner">
+            <div class="card-face card-front">
+              <div class="static-bg"></div>
+              <div class="image-container">
+                <svg class="cart-icon-large" viewBox="0 0 24 24"><use href="#i-basket"/></svg>
+              </div>
+              <div class="info-container">
+                <h3 class="title">Alien</h3>
+                <span class="id-number">#998877</span>
+              </div>
+              <div class="action-container">
+                <button class="buy-button">
+                  <span class="price">5.20</span>
+                  <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+                </button>
+                <button class="cart-button" onclick="flipCard(this)">
+                  <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="card-face card-back">
+              <div class="static-bg"></div>
+              <div class="image-container back-avatar"><div class="inner-circle"></div></div>
+              <div class="back-dividers">
+                <div class="divider"></div>
+                <div class="divider"></div>
+                <div class="divider"></div>
+                <div class="divider"></div>
+              </div>
+              <div class="action-container">
+                <button class="buy-button">
+                  <span class="price">5.20</span>
+                  <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+                </button>
+                <button class="cart-button" onclick="flipCard(this)">
+                  <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAVES карточка 4: PRINCESS -->
+        <div class="gift-card new-card selected">
+          <div class="card-check" onmousedown="favesCheckPress(this, event)" onclick="favesCheckClick(this, event)">
+            <div class="check-circle">
+              <svg viewBox="0 0 24 24"><use href="#i-check"/></svg>
+            </div>
+          </div>
+          <div class="card-inner">
+            <div class="card-face card-front">
+              <div class="static-bg"></div>
+              <div class="image-container">
+                <svg class="cart-icon-large" viewBox="0 0 24 24"><use href="#i-basket"/></svg>
+              </div>
+              <div class="info-container">
+                <h3 class="title">Princess</h3>
+                <span class="id-number">#445566</span>
+              </div>
+              <div class="action-container">
+                <button class="buy-button">
+                  <span class="price">15.99</span>
+                  <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+                </button>
+                <button class="cart-button" onclick="flipCard(this)">
+                  <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="card-face card-back">
+              <div class="static-bg"></div>
+              <div class="image-container back-avatar"><div class="inner-circle"></div></div>
+              <div class="back-dividers">
+                <div class="divider"></div>
+                <div class="divider"></div>
+                <div class="divider"></div>
+                <div class="divider"></div>
+              </div>
+              <div class="action-container">
+                <button class="buy-button">
+                  <span class="price">15.99</span>
+                  <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+                </button>
+                <button class="cart-button" onclick="flipCard(this)">
+                  <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       CART
+       ============================================================ -->
+  <div class="screen cart-screen" id="cartScreen">
+
+    <div class="capsule-wrapper" id="cartCapsuleWrapper">
+      <div class="stack-capsule" id="cartStackCapsule">
+        <div class="stack-capsule-inner">
+
+          <div class="tabs-row" id="cartTabsRow">
+            <div class="active-bg" id="cartActiveBg"></div>
+            <div class="tab-item active" data-category="active" onclick="setCartCategory(this)">Active</div>
+            <div class="tab-item" data-category="inactive" onclick="setCartCategory(this)">Inactive</div>
+          </div>
+
+          <div class="player-panel flex-mode" id="cartPlayerPanel">
+            <div class="action-capsule" id="cartGlobalCapsule" onclick="cartToggleAll()">
+              <div class="action-left">
+                <div class="check-circle" id="cartGlobalCheck">
+                  <svg viewBox="0 0 24 24"><use href="#i-check"/></svg>
+                </div>
+                <span id="cartActionText">Снять выделение</span>
+                <span class="count-badge" id="cartSelectedCount">· 4</span>
+              </div>
+            </div>
+
+            <div class="action-capsule" id="cartDeleteCapsule">
+              <div class="action-right">
+                <span>Удалить</span>
+                <span class="count-badge" id="cartDeleteCount">· 4</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="items-list" id="itemsList">
+
+      <!-- CART товар 1 -->
+      <div class="item-card selected" data-price="8.5" onmousedown="cartCardPress(this, event)" onclick="cartCardClick(this, event)">
+        <div class="item-image"></div>
+        <div class="item-info">
+          <div class="item-title">Happy Brownie</div>
+          <div class="item-id">#191967</div>
+          <div class="price-row">
+            <div class="item-price">
+              <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+              <span class="price-value">8.5</span>
+            </div>
+            <div class="quantity-control" onclick="event.stopPropagation();">
+              <button class="qty-btn" onclick="cartChangeQty(this, -1)">−</button>
+              <div class="qty-value"><span class="qty-digit">1</span></div>
+              <button class="qty-btn" onclick="cartChangeQty(this, 1)">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="check-circle item-checkbox" onmousedown="cartCheckPress(this, event)" onclick="cartCheckClick(this, event)">
+          <svg viewBox="0 0 24 24"><use href="#i-check"/></svg>
+        </div>
+      </div>
+
+      <!-- CART товар 2 -->
+      <div class="item-card selected" data-price="5.79" onmousedown="cartCardPress(this, event)" onclick="cartCardClick(this, event)">
+        <div class="item-image"></div>
+        <div class="item-info">
+          <div class="item-title">Chill Flame</div>
+          <div class="item-id">#238391</div>
+          <div class="price-row">
+            <div class="item-price">
+              <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+              <span class="price-value">5.79</span>
+            </div>
+            <div class="quantity-control" onclick="event.stopPropagation();">
+              <button class="qty-btn" onclick="cartChangeQty(this, -1)">−</button>
+              <div class="qty-value"><span class="qty-digit">1</span></div>
+              <button class="qty-btn" onclick="cartChangeQty(this, 1)">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="check-circle item-checkbox" onmousedown="cartCheckPress(this, event)" onclick="cartCheckClick(this, event)">
+          <svg viewBox="0 0 24 24"><use href="#i-check"/></svg>
+        </div>
+      </div>
+
+      <!-- CART товар 3 -->
+      <div class="item-card selected" data-price="8.99" onmousedown="cartCardPress(this, event)" onclick="cartCardClick(this, event)">
+        <div class="item-image"></div>
+        <div class="item-info">
+          <div class="item-title">Snoop Dogg</div>
+          <div class="item-id">#57709</div>
+          <div class="price-row">
+            <div class="item-price">
+              <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+              <span class="price-value">8.99</span>
+            </div>
+            <div class="quantity-control" onclick="event.stopPropagation();">
+              <button class="qty-btn" onclick="cartChangeQty(this, -1)">−</button>
+              <div class="qty-value"><span class="qty-digit">1</span></div>
+              <button class="qty-btn" onclick="cartChangeQty(this, 1)">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="check-circle item-checkbox" onmousedown="cartCheckPress(this, event)" onclick="cartCheckClick(this, event)">
+          <svg viewBox="0 0 24 24"><use href="#i-check"/></svg>
+        </div>
+      </div>
+
+      <!-- CART товар 4 -->
+      <div class="item-card selected" data-price="9.02" onmousedown="cartCardPress(this, event)" onclick="cartCardClick(this, event)">
+        <div class="item-image"></div>
+        <div class="item-info">
+          <div class="item-title">Chill Flame</div>
+          <div class="item-id">#129698</div>
+          <div class="price-row">
+            <div class="item-price">
+              <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+              <span class="price-value">9.02</span>
+            </div>
+            <div class="quantity-control" onclick="event.stopPropagation();">
+              <button class="qty-btn" onclick="cartChangeQty(this, -1)">−</button>
+              <div class="qty-value"><span class="qty-digit">1</span></div>
+              <button class="qty-btn" onclick="cartChangeQty(this, 1)">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="check-circle item-checkbox" onmousedown="cartCheckPress(this, event)" onclick="cartCheckClick(this, event)">
+          <svg viewBox="0 0 24 24"><use href="#i-check"/></svg>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="payment-footer">
+      <div class="error-text" id="errorText">Недостаточный баланс</div>
+      <button class="pay-button" id="payButton">
+        <span class="pay-button-title">Оплатите с помощью GRAM</span>
+        <span class="pay-button-subtitle" id="paySubtitle">32.3 GRAM · 4 подарка</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       CHATS
+       ============================================================ -->
+  <div class="screen" id="chatsScreen">
+
+    <div class="floating-panel categories-panel visible" id="chatsCategoriesPanel">
+      <div class="scroll-capsule" id="chatsScrollCapsule">
+        <div class="active-bg" id="chatsActiveBg"></div>
+        <div class="tab-item active" onclick="setChatCategory(this)">Все</div>
+        <div class="tab-item" onclick="setChatCategory(this)">My Chats</div>
+        <div class="tab-item" onclick="setChatCategory(this)">TON Devs</div>
+        <div class="tab-item" onclick="setChatCategory(this)">BotsCreators</div>
+      </div>
+    </div>
+
+    <div class="chats-panel" id="chatsPanel">
+
+      <!-- CHAT 1 -->
+      <div class="tg-chat-item">
+        <div class="avatar-wrapper">
+          <div class="avatar-bg"></div>
+          <div class="avatar-badge">
+            <svg viewBox="0 0 24 24"><use href="#i-camera"/></svg>
+          </div>
+        </div>
+        <div class="tg-chat-content">
+          <div class="tg-chat-top">
+            <div class="tg-chat-name">merchantname</div>
+            <div class="tg-chat-time">03.10</div>
+          </div>
+          <div class="tg-chat-bottom">
+            <div class="tg-chat-msg">the text of the last message</div>
+            <svg class="pin-icon" viewBox="0 0 24 24"><use href="#i-paperclip"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHAT 2 -->
+      <div class="tg-chat-item">
+        <div class="avatar-wrapper">
+          <div class="avatar-bg"></div>
+          <div class="avatar-badge">
+            <svg viewBox="0 0 24 24"><use href="#i-camera"/></svg>
+          </div>
+        </div>
+        <div class="tg-chat-content">
+          <div class="tg-chat-top">
+            <div class="tg-chat-name">customername</div>
+            <div class="tg-chat-time">05.10</div>
+          </div>
+          <div class="tg-chat-bottom">
+            <div class="tg-chat-msg">the text of the last message</div>
+            <svg class="pin-icon" viewBox="0 0 24 24"><use href="#i-paperclip"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHAT 3 -->
+      <div class="tg-chat-item">
+        <div class="avatar-wrapper">
+          <div class="avatar-bg"></div>
+          <div class="avatar-badge">
+            <svg viewBox="0 0 24 24"><use href="#i-camera"/></svg>
+          </div>
+        </div>
+        <div class="tg-chat-content">
+          <div class="tg-chat-top">
+            <div class="tg-chat-name">merchantname</div>
+            <div class="tg-chat-time">29.09</div>
+          </div>
+          <div class="tg-chat-bottom">
+            <div class="tg-chat-msg">the text of the last message</div>
+            <svg class="pin-icon" viewBox="0 0 24 24"><use href="#i-paperclip"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHAT 4 -->
+      <div class="tg-chat-item">
+        <div class="avatar-wrapper">
+          <div class="avatar-bg"></div>
+          <div class="avatar-badge">
+            <svg viewBox="0 0 24 24"><use href="#i-camera"/></svg>
+          </div>
+        </div>
+        <div class="tg-chat-content">
+          <div class="tg-chat-top">
+            <div class="tg-chat-name">customername <span class="verified">✓</span></div>
+            <div class="tg-chat-time">11:02</div>
+          </div>
+          <div class="tg-chat-bottom">
+            <div class="tg-chat-msg">the text of the last message</div>
+            <svg class="pin-icon" viewBox="0 0 24 24"><use href="#i-paperclip"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHAT 5 -->
+      <div class="tg-chat-item">
+        <div class="avatar-wrapper">
+          <div class="avatar-bg"></div>
+          <div class="avatar-badge">
+            <svg viewBox="0 0 24 24"><use href="#i-camera"/></svg>
+          </div>
+        </div>
+        <div class="tg-chat-content">
+          <div class="tg-chat-top">
+            <div class="tg-chat-name">merchantname <span class="verified">✓</span></div>
+            <div class="tg-chat-time">ПТ</div>
+          </div>
+          <div class="tg-chat-bottom">
+            <div class="tg-chat-msg">the text of the last message</div>
+            <svg class="pin-icon" viewBox="0 0 24 24"><use href="#i-paperclip"/></svg>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ПРОФИЛЬ (НАСТРОЙКИ)
+       ============================================================ -->
+  <div class="profile-screen" id="profileScreen">
+    <div class="profile-scroll" id="profileScroll">
+      <div class="info-section">
+
+        <div class="top-nav">
+          <button class="nav-btn icon-btn" onclick="closeProfile()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+          </button>
+          <button class="nav-btn">Изм.</button>
+        </div>
+
+        <div class="profile-header">
+          <img src="https://picsum.photos/200/200?random=3" alt="Profile" class="profile-avatar-large">
+          <div class="profile-name-large">Ignat</div>
+          <div class="profile-username">@eknatand</div>
+        </div>
+
+        <div class="card card-capsule">
+          <div class="card-item" onclick="openShopScreen()">
+            <div class="icon-box yellow">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+            </div>
+            <span class="item-text">My Shop</span>
+            <svg class="chevron" viewBox="0 0 8 14"><polyline points="1 1 7 7 1 13"></polyline></svg>
+          </div>
+        </div>
+
+        <div class="group-title">General Information</div>
+        <div class="card">
+          <div class="card-item">
+            <div class="icon-box blue">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+            </div>
+            <span class="item-text">Topic</span>
+            <svg class="chevron" viewBox="0 0 8 14"><polyline points="1 1 7 7 1 13"></polyline></svg>
+          </div>
+          <div class="card-item">
+            <div class="icon-box green">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+            </div>
+            <span class="item-text">Language</span>
+            <span class="badge-count">Русский</span>
+            <svg class="chevron" viewBox="0 0 8 14"><polyline points="1 1 7 7 1 13"></polyline></svg>
+          </div>
+          <div class="card-item">
+            <div class="icon-box orange">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+            </div>
+            <span class="item-text">Notifications</span>
+            <svg class="chevron" viewBox="0 0 8 14"><polyline points="1 1 7 7 1 13"></polyline></svg>
+          </div>
+          <div class="card-item">
+            <div class="icon-box pink">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+              </svg>
+            </div>
+            <span class="item-text">Vibrations</span>
+            <svg class="chevron" viewBox="0 0 8 14"><polyline points="1 1 7 7 1 13"></polyline></svg>
+          </div>
+          <div class="card-item">
+            <div class="icon-box purple">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            </div>
+            <span class="item-text">Focusing</span>
+            <svg class="chevron" viewBox="0 0 8 14"><polyline points="1 1 7 7 1 13"></polyline></svg>
+          </div>
+          <div class="card-item">
+            <div class="icon-box red">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+            <span class="item-text">Privacy</span>
+            <svg class="chevron" viewBox="0 0 8 14"><polyline points="1 1 7 7 1 13"></polyline></svg>
+          </div>
+          <div class="card-item">
+            <div class="icon-box lightblue">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </div>
+            <span class="item-text">Display</span>
+            <svg class="chevron" viewBox="0 0 8 14"><polyline points="1 1 7 7 1 13"></polyline></svg>
+          </div>
+          <div class="card-item">
+            <div class="icon-box grey">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </div>
+            <span class="item-text">Interface</span>
+            <svg class="chevron" viewBox="0 0 8 14"><polyline points="1 1 7 7 1 13"></polyline></svg>
+          </div>
+        </div>
+
+        <div class="group-title">Referral</div>
+        <div class="card">
+          <div class="card-item" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+            <span class="item-text" style="font-weight: 600;">Referral Link</span>
+            <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+              <div style="flex: 1; background: #1C1C1E; border-radius: 10px; padding: 10px 12px; color: #8e8e93; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                https://t.me/shopnet_bot?start=ref_557730
+              </div>
+              <button class="icon-btn" style="width: 36px; height: 36px; background: #0a84ff; border-radius: 10px; flex-shrink: 0;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-capsule">
+          <div class="btn-accent" style="color: #0a84ff;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a84ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="4"></rect>
+              <line x1="12" y1="8" x2="12" y2="16"></line>
+              <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+            <span class="item-text" style="color: #0a84ff;">Add to Home Screen</span>
+          </div>
+        </div>
+
+        <div class="group-title">About</div>
+        <div class="card">
+          <div class="card-item">
+            <div class="icon-box cyan">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <span class="item-text">Privacy Policy</span>
+            <svg class="chevron" viewBox="0 0 8 14"><polyline points="1 1 7 7 1 13"></polyline></svg>
+          </div>
+          <div class="card-item">
+            <div class="icon-box purple">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            </div>
+            <span class="item-text">Terms of Service</span>
+            <svg class="chevron" viewBox="0 0 8 14"><polyline points="1 1 7 7 1 13"></polyline></svg>
+          </div>
+          <div class="card-item">
+            <div class="icon-box orange">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#ffffff">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                <circle cx="8" cy="12" r="1.5" fill="#ff9f0a"></circle>
+                <circle cx="12" cy="12" r="1.5" fill="#ff9f0a"></circle>
+                <circle cx="16" cy="12" r="1.5" fill="#ff9f0a"></circle>
+              </svg>
+            </div>
+            <span class="item-text">Support</span>
+            <svg class="chevron" viewBox="0 0 8 14"><polyline points="1 1 7 7 1 13"></polyline></svg>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MY SHOP
+       ============================================================ -->
+  <div class="shop-screen" id="shopScreen">
+    <div class="shop-scroll-container" id="shopScrollContainer">
+
+      <div class="shop-header-section" id="shopHeaderSection">
+        <div class="shop-back-button" onclick="closeShopScreen()">
+          <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        </div>
+        <div class="shop-edit-button">Изм.</div>
+        <div class="shop-avatar-container">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 15 L85 40 L60 50 L70 75 L50 60 L30 75 L40 50 L15 40 Z" fill="rgba(0,0,0,0.1)" transform="translate(2, 2)"/>
+            <path d="M50 15 L85 40 L60 50 L70 75 L50 60 L30 75 L40 50 L15 40 Z" fill="#ffffff"/>
+            <path d="M30 80 Q 50 80 70 80 L 75 85 L 25 85 Z" fill="#ffffff"/>
+            <path d="M25 85 Q 50 87 75 85" fill="none" stroke="#e0e0e0" stroke-width="1"/>
+            <circle cx="75" cy="80" r="5" fill="#f4c542"/>
+          </svg>
+        </div>
+        <div class="shop-channel-title">
+          Telegram Designers
+          <svg class="shop-verified-badge" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+        </div>
+        <a href="https://t.me/designers" target="_blank" class="shop-channel-username">@designers</a>
+        <div class="shop-action-buttons">
+          <div class="shop-action-btn">
+            <span class="shop-stat-number">9</span>
+            <span class="shop-stat-label">Подписки</span>
+          </div>
+          <div class="shop-action-btn">
+            <span class="shop-stat-number">3.1M</span>
+            <span class="shop-stat-label">Подписчики</span>
+          </div>
+          <div class="shop-action-btn">
+            <span class="shop-stat-number">48.0M</span>
+            <span class="shop-stat-label">лайков</span>
+          </div>
+          <div class="shop-action-btn">
+            <svg viewBox="0 0 24 24"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+            <span>ещё</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="shop-info-section">
+        <div class="shop-info-card">
+          <div class="shop-info-label">описание</div>
+          <div class="shop-info-text">
+            Feature suggestions for Telegram from designers all over the world. If you want to contribute, message <a href="#">@designers</a> directly.
+          </div>
+        </div>
+
+        <div class="shop-bottom-categories-wrapper">
+          <div class="shop-scroll-capsule" id="shopScrollCapsule">
+            <div class="shop-active-bg" id="shopActiveBg"></div>
+            <div class="shop-tab-item active" onclick="setShopCategory(this)">All</div>
+            <div class="shop-tab-item" onclick="setShopCategory(this)">Active</div>
+            <div class="shop-tab-item" onclick="setShopCategory(this)">Inactive</div>
+            <div class="shop-tab-item" onclick="setShopCategory(this)">Faves</div>
+          </div>
+        </div>
+
+        <div class="shop-cards-grid" id="shopGrid">
+
+          <!-- SHOP карточка 1: SNOOP DOGG -->
+          <div class="gift-card snoop-card">
+            <div class="card-inner">
+              <div class="card-face card-front">
+                <div class="static-bg"></div>
+                <div class="image-container">
+                  <svg class="cart-icon-large" viewBox="0 0 24 24"><use href="#i-basket"/></svg>
+                </div>
+                <div class="info-container">
+                  <h3 class="title">Snoop Dogg</h3>
+                  <span class="id-number">#557730</span>
+                </div>
+                <div class="action-container">
+                  <button class="buy-button">
+                    <span class="price">8.97</span>
+                    <svg class="icon" width="14" height="14" viewBox="0 0 24 24"><use href="#i-triangle"/></svg>
+                  </button>
+                  <button class="cart-button" onclick="flipCard(this)">
+                    <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="card-face card-back">
+                <div class="static-bg"></div>
+                <div class="image-container back-avatar"><div class="inner-circle"></div></div>
+                <div class="back-dividers">
+                  <div class="divider"></div>
+                  <div class="divider"></div>
+                  <div class="divider"></div>
+                  <div class="divider"></div>
+                </div>
+                <div class="action-container">
+                  <button class="buy-button">
+                    <span class="price">8.97</span>
+                    <svg class="icon" width="14" height="14" viewBox="0 0 24 24"><use href="#i-triangle"/></svg>
+                  </button>
+                  <button class="cart-button" onclick="flipCard(this)">
+                    <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SHOP карточка 2: PIKACHU -->
+          <div class="gift-card new-card">
+            <div class="card-inner">
+              <div class="card-face card-front">
+                <div class="static-bg"></div>
+                <div class="image-container">
+                  <svg class="cart-icon-large" viewBox="0 0 24 24"><use href="#i-basket"/></svg>
+                </div>
+                <div class="info-container">
+                  <h3 class="title">Pikachu</h3>
+                  <span class="id-number">#001234</span>
+                </div>
+                <div class="action-container">
+                  <button class="buy-button">
+                    <span class="price">12.50</span>
+                    <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+                  </button>
+                  <button class="cart-button" onclick="flipCard(this)">
+                    <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="card-face card-back">
+                <div class="static-bg"></div>
+                <div class="image-container back-avatar"><div class="inner-circle"></div></div>
+                <div class="back-dividers">
+                  <div class="divider"></div>
+                  <div class="divider"></div>
+                  <div class="divider"></div>
+                  <div class="divider"></div>
+                </div>
+                <div class="action-container">
+                  <button class="buy-button">
+                    <span class="price">12.50</span>
+                    <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+                  </button>
+                  <button class="cart-button" onclick="flipCard(this)">
+                    <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SHOP карточка 3: ALIEN -->
+          <div class="gift-card new-card">
+            <div class="card-inner">
+              <div class="card-face card-front">
+                <div class="static-bg"></div>
+                <div class="image-container">
+                  <svg class="cart-icon-large" viewBox="0 0 24 24"><use href="#i-basket"/></svg>
+                </div>
+                <div class="info-container">
+                  <h3 class="title">Alien</h3>
+                  <span class="id-number">#998877</span>
+                </div>
+                <div class="action-container">
+                  <button class="buy-button">
+                    <span class="price">5.20</span>
+                    <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+                  </button>
+                  <button class="cart-button" onclick="flipCard(this)">
+                    <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="card-face card-back">
+                <div class="static-bg"></div>
+                <div class="image-container back-avatar"><div class="inner-circle"></div></div>
+                <div class="back-dividers">
+                  <div class="divider"></div>
+                  <div class="divider"></div>
+                  <div class="divider"></div>
+                  <div class="divider"></div>
+                </div>
+                <div class="action-container">
+                  <button class="buy-button">
+                    <span class="price">5.20</span>
+                    <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+                  </button>
+                  <button class="cart-button" onclick="flipCard(this)">
+                    <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SHOP карточка 4: PRINCESS -->
+          <div class="gift-card new-card">
+            <div class="card-inner">
+              <div class="card-face card-front">
+                <div class="static-bg"></div>
+                <div class="image-container">
+                  <svg class="cart-icon-large" viewBox="0 0 24 24"><use href="#i-basket"/></svg>
+                </div>
+                <div class="info-container">
+                  <h3 class="title">Princess</h3>
+                  <span class="id-number">#445566</span>
+                </div>
+                <div class="action-container">
+                  <button class="buy-button">
+                    <span class="price">15.99</span>
+                    <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+                  </button>
+                  <button class="cart-button" onclick="flipCard(this)">
+                    <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="card-face card-back">
+                <div class="static-bg"></div>
+                <div class="image-container back-avatar"><div class="inner-circle"></div></div>
+                <div class="back-dividers">
+                  <div class="divider"></div>
+                  <div class="divider"></div>
+                  <div class="divider"></div>
+                  <div class="divider"></div>
+                </div>
+                <div class="action-container">
+                  <button class="buy-button">
+                    <span class="price">15.99</span>
+                    <svg class="price-icon" viewBox="0 0 100 100"><use href="#i-ton"/></svg>
+                  </button>
+                  <button class="cart-button" onclick="flipCard(this)">
+                    <svg viewBox="0 0 24 24"><use href="#i-refresh"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       НИЖНЯЯ ПАНЕЛЬ
+       ============================================================ -->
+  <div class="nav-bar" id="navbar">
+    <div class="nav-backdrop" id="backdrop"></div>
+
+    <a class="nav-item-new active" data-tab="home">
+      <div class="avatar-container">
+        <div class="avatar-icon" style="background-image: url('https://picsum.photos/50/50?random=1');"></div>
+        <div class="black-dot"></div>
+      </div>
+      <span>Home</span>
+    </a>
+
+    <a class="nav-item-new" data-tab="faves">
+      <div class="avatar-container">
+        <div class="avatar-icon" style="background-image: url('https://picsum.photos/50/50?random=2');"></div>
+        <div class="black-dot"></div>
+      </div>
+      <span>Faves</span>
+    </a>
+
+    <a class="nav-item-new" data-tab="cart">
+      <div class="avatar-container">
+        <div class="avatar-icon" style="background-image: url('https://picsum.photos/50/50?random=4');"></div>
+        <div class="black-dot"></div>
+      </div>
+      <span>Cart</span>
+    </a>
+
+    <a class="nav-item-new" data-tab="chats">
+      <div class="avatar-container">
+        <div class="avatar-icon" style="background-image: url('https://picsum.photos/50/50?random=5');"></div>
+        <div class="black-dot"></div>
+      </div>
+      <span>Chats</span>
+    </a>
+  </div>
+
+  <div class="profile-button" id="profileButton" onclick="setActiveProfile()">
+    <div class="major-coin-button">
+      <span class="major-coin-symbol">I</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+
+  /* ============================================================
+     TELEGRAM
+     ============================================================ */
+  async function initTelegramApp() {
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+      if (window.Telegram.WebApp.requestFullscreen) {
+        try { await window.Telegram.WebApp.requestFullscreen(); } catch (error) {}
+      }
+    }
+  }
+  window.addEventListener('DOMContentLoaded', initTelegramApp);
+
+  /* ============================================================
+     ССЫЛКИ НА ЭЛЕМЕНТЫ
+     ============================================================ */
+  const editPanel = document.getElementById('editPanel');
+  const titlePanel = document.getElementById('titlePanel');
+  const buttonsPanel = document.getElementById('buttonsPanel');
+  const searchPanel = document.getElementById('searchPanel');
+  const categoriesPanel = document.getElementById('categoriesPanel');
+  const contentArea = document.getElementById('contentArea');
+  const cardsGrid = document.getElementById('cardsGrid');
+  const capsule = document.getElementById('scrollCapsule');
+  const activeBg = document.getElementById('activeBg');
+
+  const favesScreen = document.getElementById('favesScreen');
+  const favesContent = document.getElementById('favesContent');
+  const favesGrid = document.getElementById('favesGrid');
+  const favesCapsuleWrapper = document.getElementById('favesCapsuleWrapper');
+  const favesTabsRow = document.getElementById('favesTabsRow');
+  const favesActiveBg = document.getElementById('favesActiveBg');
+  const favesGlobalCapsule = document.getElementById('favesGlobalCapsule');
+  const favesGlobalCheck = document.getElementById('favesGlobalCheck');
+  const favesActionText = document.getElementById('favesActionText');
+  const favesSelectedCount = document.getElementById('favesSelectedCount');
+  const favesDeleteCount = document.getElementById('favesDeleteCount');
+  const favesDeleteCapsule = document.getElementById('favesDeleteCapsule');
+  const favesPlayerPanel = document.getElementById('favesPlayerPanel');
+  const menuPanel = document.getElementById('menuPanel');
+  const menuHighlight = document.getElementById('menuHighlight');
+
+  const cartScreen = document.getElementById('cartScreen');
+  const itemsList = document.getElementById('itemsList');
+  const cartCapsuleWrapper = document.getElementById('cartCapsuleWrapper');
+  const cartTabsRow = document.getElementById('cartTabsRow');
+  const cartActiveBg = document.getElementById('cartActiveBg');
+  const cartGlobalCapsule = document.getElementById('cartGlobalCapsule');
+  const cartGlobalCheck = document.getElementById('cartGlobalCheck');
+  const cartActionText = document.getElementById('cartActionText');
+  const cartSelectedCount = document.getElementById('cartSelectedCount');
+  const cartDeleteCount = document.getElementById('cartDeleteCount');
+  const payButton = document.getElementById('payButton');
+  const paySubtitle = document.getElementById('paySubtitle');
+  const errorText = document.getElementById('errorText');
+
+  const chatsScreen = document.getElementById('chatsScreen');
+  const chatsPanel = document.getElementById('chatsPanel');
+  const chatsCategoriesPanel = document.getElementById('chatsCategoriesPanel');
+  const chatsCapsule = document.getElementById('chatsScrollCapsule');
+  const chatsActiveBg = document.getElementById('chatsActiveBg');
+
+  const profileButton = document.getElementById('profileButton');
+  const profileScreen = document.getElementById('profileScreen');
+  const profileScroll = document.getElementById('profileScroll');
+  const shopScreen = document.getElementById('shopScreen');
+  const shopScrollContainer = document.getElementById('shopScrollContainer');
+  const shopHeaderSection = document.getElementById('shopHeaderSection');
+  const shopCapsule = document.getElementById('shopScrollCapsule');
+  const shopActiveBg = document.getElementById('shopActiveBg');
+
+  const navbar = document.getElementById('navbar');
+  const navItems = document.querySelectorAll('.nav-item-new');
+  const backdrop = document.getElementById('backdrop');
+  const homeItem = document.querySelector('.nav-item-new[data-tab="home"]');
+
+  const homeTabs = capsule.querySelectorAll('.tab-item');
+  const favesTabs = favesTabsRow.querySelectorAll('.tab-item');
+  const cartTabs = cartTabsRow.querySelectorAll('.tab-item');
+  const chatsTabs = chatsCapsule.querySelectorAll('.tab-item');
+  const shopTabs = shopCapsule.querySelectorAll('.shop-tab-item');
+  const menuItems = menuPanel.querySelectorAll('.menu-item');
+
+  /* ============================================================
+     ОБЩИЕ ХЕЛПЕРЫ
+     ============================================================ */
+  const RISE_DISTANCE = 46;
+  const SCROLL_THRESHOLD = 60;
+  let isProfileActive = false;
+  let currentTab = 'home';
+
+  function easeOutQuint(t) {
+    return 1 - Math.pow(1 - t, 5);
+  }
+
+  function smoothScrollTo(element, targetLeft, duration) {
+    const startLeft = element.scrollLeft;
+    const distance = targetLeft - startLeft;
+    const startTime = performance.now();
+    function step(now) {
+      const progress = Math.min((now - startTime) / duration, 1);
+      element.scrollLeft = startLeft + distance * easeOutQuint(progress);
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function animateSliderTo(tab, bg, duration) {
+    const startLeft = parseFloat(bg.style.left) || 0;
+    const startWidth = parseFloat(bg.style.width) || 0;
+    const targetLeft = tab.offsetLeft;
+    const targetWidth = tab.offsetWidth;
+    const startTime = performance.now();
+    bg.style.transition = 'none';
+    function step(now) {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = easeOutQuint(progress);
+      bg.style.left = (startLeft + (targetLeft - startLeft) * eased) + 'px';
+      bg.style.width = (startWidth + (targetWidth - startWidth) * eased) + 'px';
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        bg.style.transition = 'left 0.4s cubic-bezier(0.22, 1, 0.36, 1), width 0.4s cubic-bezier(0.22, 1, 0.36, 1)';
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function placeSlider(container, tab, bg) {
+    if (!tab) return;
+    const containerRect = container.getBoundingClientRect();
+    const tabRect = tab.getBoundingClientRect();
+    bg.style.transition = 'none';
+    bg.style.left = (tabRect.left - containerRect.left + container.scrollLeft) + 'px';
+    bg.style.width = tabRect.width + 'px';
+    void bg.offsetHeight;
+    bg.style.transition = 'left 0.35s cubic-bezier(0.25, 1, 0.5, 1), width 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
+  }
+
+  function applyProgress(progress, capsuleElement) {
+    searchPanel.style.transform = 'scaleY(' + (1 - progress) + ')';
+    searchPanel.style.opacity = String(1 - progress);
+    if (capsuleElement) {
+      capsuleElement.style.transform = 'translateY(' + (-progress * RISE_DISTANCE) + 'px)';
+    }
+  }
+
+  function bindScroll(element, capsuleElement, tabName) {
+    let ticking = false;
+    element.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        if (currentTab === tabName) {
+          applyProgress(Math.min(element.scrollTop / SCROLL_THRESHOLD, 1), capsuleElement);
+        }
+        ticking = false;
+      });
+    }, { passive: true });
+  }
+
+  function resetScroll(element, capsuleElement) {
+    element.scrollTop = 0;
+    applyProgress(0, capsuleElement);
+  }
+
+  function setHeaderVisible(visible) {
+    const panels = [editPanel, titlePanel, buttonsPanel, searchPanel];
+    panels.forEach(function (panel) {
+      panel.classList.toggle('visible', visible);
+    });
+  }
+
+  /* ============================================================
+     СЛАЙДЕР НИЖНЕЙ ПАНЕЛИ
+     ============================================================ */
+  function backdropOffset(item) {
+    const index = Array.prototype.indexOf.call(navItems, item);
+    if (index < 0) return 0;
+    const itemWidth = item.getBoundingClientRect().width;
+    const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-gap')) || 3;
+    return index * (itemWidth + gap);
+  }
+
+  function moveBackdrop(item, instant) {
+    if (!item) return;
+    const x = backdropOffset(item);
+    if (instant) {
+      backdrop.style.transition = 'none';
+      backdrop.style.transform = 'translateX(' + x + 'px)';
+      void backdrop.offsetHeight;
+      backdrop.style.transition = 'opacity 0.2s ease';
+      backdrop.style.opacity = '1';
+    } else {
+      backdrop.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s ease, background-color 0.3s ease';
+      backdrop.style.transform = 'translateX(' + x + 'px)';
+      backdrop.style.opacity = '1';
+    }
+  }
+
+  function hideBackdrop() {
+    backdrop.style.transition = 'opacity 0.2s ease';
+    backdrop.style.opacity = '0';
+  }
+
+  /* ============================================================
+     ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
+     ============================================================ */
+  function showTab(tab) {
+    currentTab = tab;
+
+    profileScreen.classList.remove('visible');
+    shopScreen.classList.remove('visible');
+    favesScreen.classList.remove('visible');
+    cartScreen.classList.remove('visible');
+    chatsScreen.classList.remove('visible');
+    categoriesPanel.classList.remove('visible');
+    cardsGrid.classList.remove('visible');
+    hideMenuPanel();
+
+    setHeaderVisible(true);
+    applyProgress(0, null);
+    categoriesPanel.style.transform = 'translateY(0)';
+    favesCapsuleWrapper.style.transform = 'translateY(0)';
+    cartCapsuleWrapper.style.transform = 'translateY(0)';
+    chatsCategoriesPanel.style.transform = 'translateY(0)';
+
+    if (tab === 'home') {
+      categoriesPanel.classList.add('visible');
+      cardsGrid.classList.add('visible');
+      resetScroll(contentArea, categoriesPanel);
+      requestAnimationFrame(function () {
+        placeSlider(capsule, capsule.querySelector('.tab-item.active'), activeBg);
+      });
+    } else if (tab === 'faves') {
+      favesScreen.classList.add('visible');
+      resetScroll(favesContent, favesCapsuleWrapper);
+      requestAnimationFrame(function () {
+        initFavesSlider();
+        updateFavesUI();
+      });
+    } else if (tab === 'cart') {
+      cartScreen.classList.add('visible');
+      resetScroll(itemsList, cartCapsuleWrapper);
+      requestAnimationFrame(function () {
+        initCartSlider();
+        updateCartUI();
+      });
+    } else if (tab === 'chats') {
+      chatsScreen.classList.add('visible');
+      resetScroll(chatsPanel, chatsCategoriesPanel);
+      requestAnimationFrame(function () {
+        placeSlider(chatsCapsule, chatsCapsule.querySelector('.tab-item.active'), chatsActiveBg);
+      });
+    }
+  }
+
+  function selectTab(item) {
+    if (!item) return;
+    const instant = isProfileActive;
+    isProfileActive = false;
+    profileButton.classList.remove('active');
+    navItems.forEach(function (i) { i.classList.remove('active'); });
+    item.classList.add('active');
+    moveBackdrop(item, instant);
+    showTab(item.getAttribute('data-tab'));
+  }
+
+  navItems.forEach(function (item) {
+    item.addEventListener('click', function () { selectTab(item); });
+  });
+
+  /* ============================================================
+     НАСТРОЙКИ (МОНЕТА)
+     ============================================================ */
+  function setActiveProfile() {
+    if (isProfileActive) {
+      selectTab(homeItem);
+      return;
+    }
+    isProfileActive = true;
+    currentTab = 'profile';
+
+    navItems.forEach(function (i) { i.classList.remove('active'); });
+    hideBackdrop();
+    profileButton.classList.add('active');
+
+    setHeaderVisible(false);
+    hideMenuPanel();
+    categoriesPanel.classList.remove('visible');
+    cardsGrid.classList.remove('visible');
+    favesScreen.classList.remove('visible');
+    cartScreen.classList.remove('visible');
+    chatsScreen.classList.remove('visible');
+
+    profileScreen.classList.add('visible');
+    shopScreen.classList.remove('visible');
+    profileScroll.scrollTop = 0;
+  }
+
+  function closeProfile() {
+    selectTab(homeItem);
+  }
+
+  /* ============================================================
+     HOME
+     ============================================================ */
+  function setActiveCategory(element) {
+    homeTabs.forEach(function (t) { t.classList.remove('active'); });
+    element.classList.add('active');
+    placeSlider(capsule, element, activeBg);
+    capsule.scrollTo({
+      left: (element.offsetLeft + element.offsetWidth / 2) - capsule.offsetWidth / 2,
+      behavior: 'smooth'
+    });
+  }
+
+  bindScroll(contentArea, categoriesPanel, 'home');
+
+  /* ============================================================
+     CHATS
+     ============================================================ */
+  function setChatCategory(element) {
+    chatsTabs.forEach(function (t) { t.classList.remove('active'); });
+    element.classList.add('active');
+    placeSlider(chatsCapsule, element, chatsActiveBg);
+    chatsCapsule.scrollTo({
+      left: (element.offsetLeft + element.offsetWidth / 2) - chatsCapsule.offsetWidth / 2,
+      behavior: 'smooth'
+    });
+  }
+
+  bindScroll(chatsPanel, chatsCategoriesPanel, 'chats');
+
+  /* ============================================================
+     FAVES: ВЫДЕЛЕНИЕ
+     ============================================================ */
+  const WIDTH_ANIM_MS = 300;
+  let widthAnimating = false;
+
+  function syncDeleteWidth() {
+    const w = favesDeleteCapsule.offsetWidth;
+    if (w > 0) {
+      favesPlayerPanel.style.setProperty('--delete-width', w + 'px');
+    }
+  }
+
+  function animateFavesWidth(newText, shouldSelectAll) {
+    if (widthAnimating) {
+      favesActionText.textContent = newText;
+      favesGlobalCheck.classList.toggle('selected', !shouldSelectAll);
+      return;
+    }
+    widthAnimating = true;
+
+    const oldWidth = favesGlobalCapsule.offsetWidth;
+    favesGlobalCapsule.style.width = oldWidth + 'px';
+
+    favesActionText.textContent = newText;
+    favesGlobalCheck.classList.toggle('selected', !shouldSelectAll);
+
+    favesGlobalCapsule.style.width = 'auto';
+    const newWidth = favesGlobalCapsule.offsetWidth;
+
+    favesGlobalCapsule.style.width = oldWidth + 'px';
+    void favesGlobalCapsule.offsetWidth;
+
+    requestAnimationFrame(function () {
+      favesGlobalCapsule.style.width = newWidth + 'px';
+      setTimeout(function () {
+        favesGlobalCapsule.style.width = 'auto';
+        widthAnimating = false;
+      }, WIDTH_ANIM_MS + 20);
+    });
+  }
+
+  function updateFavesUI() {
+    const items = favesGrid.querySelectorAll('.gift-card');
+    const selected = favesGrid.querySelectorAll('.gift-card.selected');
+    const count = selected.length;
+    const total = items.length;
+
+    favesSelectedCount.textContent = '· ' + count;
+    favesDeleteCount.textContent = '· ' + count;
+    requestAnimationFrame(syncDeleteWidth);
+
+    const shouldSelectAll = !(total > 0 && count === total);
+    const newText = shouldSelectAll ? 'Выбрать все' : 'Снять выделение';
+
+    if (favesActionText.textContent !== newText) {
+      animateFavesWidth(newText, shouldSelectAll);
+    } else {
+      favesGlobalCheck.classList.toggle('selected', !shouldSelectAll);
+    }
+  }
+
+  function favesToggleAll() {
+    const items = favesGrid.querySelectorAll('.gift-card');
+    if (items.length === 0) {
+      favesGlobalCheck.classList.toggle('selected');
+      return;
+    }
+    const allSelected = favesGrid.querySelectorAll('.gift-card.selected').length === items.length;
+    items.forEach(function (item) { item.classList.toggle('selected', !allSelected); });
+    updateFavesUI();
+  }
+
+  function favesCheckPress(checkElement, event) {
+    event.stopPropagation();
+    checkElement.classList.add('pressed');
+    const removePressed = function () {
+      checkElement.classList.remove('pressed');
+      document.removeEventListener('mouseup', removePressed);
+      document.removeEventListener('touchend', removePressed);
+    };
+    document.addEventListener('mouseup', removePressed);
+    document.addEventListener('touchend', removePressed);
+  }
+
+  function favesCheckClick(checkElement, event) {
+    event.stopPropagation();
+    const card = checkElement.closest('.gift-card');
+    setTimeout(function () {
+      card.classList.toggle('selected');
+      updateFavesUI();
+    }, 100);
+  }
+
+  function initFavesSlider() {
+    placeSlider(favesTabsRow, favesTabsRow.querySelector('.tab-item.active'), favesActiveBg);
+  }
+
+  /* ============================================================
+     FAVES: ДОЛГОЕ НАЖАТИЕ + МЕНЮ
+     ============================================================ */
+  const LONG_PRESS_MS = 200;
+  const MOVE_TOLERANCE = 8;
+  const SCROLL_DURATION = 400;
+
+  let pressTimer = null;
+  let pressStartX = 0;
+  let pressStartY = 0;
+  let longPressFired = false;
+  let currentPressedTab = null;
+  let lastFavesTab = null;
+  let panelHideTimer = null;
+  let currentHighlightedIndex = -1;
+
+  function moveHighlightTo(item) {
+    if (!item) {
+      menuHighlight.classList.remove('visible');
+      currentHighlightedIndex = -1;
+      return;
+    }
+    const itemIndex = parseInt(item.dataset.index, 10);
+    if (itemIndex === currentHighlightedIndex) return;
+
+    if (currentHighlightedIndex === -1) {
+      menuHighlight.classList.remove('spring');
+    } else {
+      menuHighlight.classList.add('spring');
+    }
+
+    menuHighlight.style.width = item.offsetWidth + 'px';
+    menuHighlight.style.height = item.offsetHeight + 'px';
+    menuHighlight.style.transform = 'translate(' + item.offsetLeft + 'px, ' + item.offsetTop + 'px) translateZ(0)';
+    menuHighlight.classList.add('visible');
+
+    currentHighlightedIndex = itemIndex;
+  }
+
+  menuItems.forEach(function (item) {
+    item.addEventListener('mouseenter', function () { moveHighlightTo(item); });
+    item.addEventListener('mouseleave', function (e) {
+      const related = e.relatedTarget;
+      if (related && related.closest && related.closest('.menu-item')) return;
+      if (!related || !related.closest || !related.closest('.menu-panel')) {
+        menuHighlight.classList.remove('visible');
+        currentHighlightedIndex = -1;
+      }
+    });
+    item.addEventListener('touchstart', function () { moveHighlightTo(item); }, { passive: true });
+    item.addEventListener('click', function (e) {
+      e.stopPropagation();
+      hideMenuPanel();
+    });
+  });
+
+  menuPanel.addEventListener('mouseleave', function () {
+    menuHighlight.classList.remove('visible');
+    currentHighlightedIndex = -1;
+  });
+  menuPanel.addEventListener('click', function (e) { e.stopPropagation(); });
+  favesTabsRow.addEventListener('click', function (e) { e.stopPropagation(); });
+
+  function setFavesTabVisual(tab) {
+    favesTabs.forEach(function (t) { t.classList.remove('active'); });
+    tab.classList.add('active');
+
+    const targetScroll = (tab.offsetLeft + tab.offsetWidth / 2) - favesTabsRow.offsetWidth / 2;
+    const maxScroll = favesTabsRow.scrollWidth - favesTabsRow.offsetWidth;
+    const clampedScroll = Math.max(0, Math.min(targetScroll, maxScroll));
+
+    smoothScrollTo(favesTabsRow, clampedScroll, SCROLL_DURATION);
+    animateSliderTo(tab, favesActiveBg, SCROLL_DURATION);
+  }
+
+  function setTransformOriginFromTab(tab) {
+    if (!tab) return;
+    const wrapperRect = favesCapsuleWrapper.getBoundingClientRect();
+    const tabRect = tab.getBoundingClientRect();
+    const tabCenterX = tabRect.left - wrapperRect.left + tabRect.width / 2;
+
+    const panelWidth = menuPanel.offsetWidth;
+    const wrapperWidth = wrapperRect.width;
+    const panelLeft = (wrapperWidth / 2) - (panelWidth / 2);
+
+    let originX = tabCenterX - panelLeft;
+    const minOrigin = 16;
+    const maxOrigin = Math.max(minOrigin, panelWidth - 16);
+    originX = Math.max(minOrigin, Math.min(maxOrigin, originX));
+
+    menuPanel.style.transformOrigin = originX + 'px top';
+  }
+
+  function showMenuPanel(tab) {
+    if (panelHideTimer) {
+      clearTimeout(panelHideTimer);
+      panelHideTimer = null;
+    }
+
+    menuHighlight.classList.remove('visible', 'spring');
+    currentHighlightedIndex = -1;
+
+    menuPanel.classList.remove('visible', 'closing');
+    menuPanel.style.transition = 'none';
+    menuPanel.style.transformOrigin = 'top center';
+    menuPanel.style.transform = 'translate(-50%, 0) scale(0.05)';
+    menuPanel.style.opacity = '0';
+    menuPanel.style.filter = 'blur(6px)';
+
+    void menuPanel.offsetWidth;
+
+    if (tab) setTransformOriginFromTab(tab);
+
+    menuPanel.style.transition = '';
+    menuPanel.style.transform = '';
+    menuPanel.style.opacity = '';
+    menuPanel.style.filter = '';
+
+    void menuPanel.offsetWidth;
+    menuPanel.classList.add('visible');
+  }
+
+  function hideMenuPanel() {
+    if (!menuPanel.classList.contains('visible') && !menuPanel.classList.contains('closing')) return;
+    menuPanel.classList.remove('visible');
+    menuPanel.classList.add('closing');
+    menuHighlight.classList.remove('visible');
+    currentHighlightedIndex = -1;
+    if (panelHideTimer) clearTimeout(panelHideTimer);
+    panelHideTimer = setTimeout(function () {
+      menuPanel.classList.remove('closing');
+      panelHideTimer = null;
+    }, 200);
+  }
+
+  function cancelPress() {
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      pressTimer = null;
+    }
+    if (currentPressedTab) {
+      currentPressedTab.classList.remove('pressing');
+      currentPressedTab = null;
+    }
+    longPressFired = false;
+  }
+
+  function triggerLongPress(tab) {
+    longPressFired = true;
+    setFavesTabVisual(tab);
+    lastFavesTab = tab;
+    showMenuPanel(tab);
+  }
+
+  function onPressStart(e) {
+    const tab = e.target.closest('.tab-item');
+    if (!tab) return;
+
+    const isAllTab = tab.dataset.category === 'all';
+    const source = e.touches ? e.touches[0] : e;
+    pressStartX = source.clientX;
+    pressStartY = source.clientY;
+    longPressFired = false;
+    cancelPress();
+
+    if (isAllTab) {
+      setFavesTabVisual(tab);
+      lastFavesTab = tab;
+      hideMenuPanel();
+      return;
+    }
+
+    currentPressedTab = tab;
+    tab.classList.add('pressing');
+
+    pressTimer = setTimeout(function () {
+      if (currentPressedTab === tab) triggerLongPress(tab);
+    }, LONG_PRESS_MS);
+  }
+
+  function onPressMove(e) {
+    if (!pressTimer) return;
+    const source = e.touches ? e.touches[0] : e;
+    if (Math.abs(source.clientX - pressStartX) > MOVE_TOLERANCE ||
+        Math.abs(source.clientY - pressStartY) > MOVE_TOLERANCE) {
+      cancelPress();
+    }
+  }
+
+  function onPressEnd(e) {
+    const tab = e.target.closest('.tab-item');
+    if (!longPressFired && currentPressedTab && currentPressedTab === tab) {
+      if (lastFavesTab && lastFavesTab !== tab) hideMenuPanel();
+      setFavesTabVisual(tab);
+      lastFavesTab = tab;
+      if (tab.dataset.category === 'all') hideMenuPanel();
+    }
+    cancelPress();
+  }
+
+  favesTabs.forEach(function (tab) {
+    tab.addEventListener('mousedown', onPressStart);
+    tab.addEventListener('mouseup', onPressEnd);
+    tab.addEventListener('mouseleave', cancelPress);
+    tab.addEventListener('touchstart', onPressStart, { passive: true });
+    tab.addEventListener('touchend', onPressEnd);
+    tab.addEventListener('touchcancel', cancelPress);
+    tab.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    tab.addEventListener('dragstart', function (e) { e.preventDefault(); });
+  });
+
+  document.addEventListener('mousemove', onPressMove);
+  document.addEventListener('touchmove', onPressMove, { passive: true });
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('#favesCapsuleWrapper')) hideMenuPanel();
+  });
+
+  bindScroll(favesContent, favesCapsuleWrapper, 'faves');
+
+  /* ============================================================
+     CART
+     ============================================================ */
+  function initCartSlider() {
+    placeSlider(cartTabsRow, cartTabsRow.querySelector('.tab-item.active'), cartActiveBg);
+  }
+
+  function setCartCategory(element) {
+    cartTabs.forEach(function (t) { t.classList.remove('active'); });
+    element.classList.add('active');
+
+    const targetScroll = (element.offsetLeft + element.offsetWidth / 2) - cartTabsRow.offsetWidth / 2;
+    const maxScroll = cartTabsRow.scrollWidth - cartTabsRow.offsetWidth;
+    const clampedScroll = Math.max(0, Math.min(targetScroll, maxScroll));
+
+    smoothScrollTo(cartTabsRow, clampedScroll, 400);
+    animateSliderTo(element, cartActiveBg, 400);
+  }
+
+  function getNoun(number, one, two, five) {
+    let n = Math.abs(number) % 100;
+    if (n >= 5 && n <= 20) return five;
+    n %= 10;
+    if (n === 1) return one;
+    if (n >= 2 && n <= 4) return two;
+    return five;
+  }
+
+  function animateCartWidth(updateTextCallback) {
+    const currentWidth = cartGlobalCapsule.offsetWidth;
+    cartGlobalCapsule.style.width = currentWidth + 'px';
+    updateTextCallback();
+    requestAnimationFrame(function () {
+      cartGlobalCapsule.style.width = 'auto';
+    });
+  }
+
+  function updateCartUI() {
+    const items = itemsList.querySelectorAll('.item-card');
+    const selectedItems = itemsList.querySelectorAll('.item-card.selected');
+    const count = selectedItems.length;
+    const total = items.length;
+
+    cartSelectedCount.textContent = '· ' + count;
+    cartDeleteCount.textContent = '· ' + count;
+
+    const shouldSelectAll = !(count === total && total > 0);
+    const newText = shouldSelectAll ? 'Выбрать все' : 'Снять выделение';
+
+    const applyText = function () {
+      cartGlobalCheck.classList.toggle('selected', !shouldSelectAll);
+      cartActionText.textContent = newText;
+    };
+
+    if (cartActionText.textContent !== newText) {
+      animateCartWidth(applyText);
+    } else {
+      applyText();
+    }
+
+    if (count === 0) {
+      payButton.classList.add('disabled');
+      paySubtitle.textContent = 'Нет выбранных подарков';
+      errorText.style.display = 'none';
+    } else {
+      let sum = 0;
+      selectedItems.forEach(function (card) {
+        const price = parseFloat(card.dataset.price) || 0;
+        const qty = parseInt(card.querySelector('.qty-digit').textContent, 10) || 1;
+        sum += price * qty;
+      });
+      payButton.classList.remove('disabled');
+      paySubtitle.textContent = parseFloat(sum.toFixed(2)) + ' GRAM · ' + count + ' ' + getNoun(count, 'подарок', 'подарка', 'подарков');
+      errorText.style.display = 'block';
+    }
+  }
+
+  function cartToggleAll() {
+    const items = itemsList.querySelectorAll('.item-card');
+    const allSelected = itemsList.querySelectorAll('.item-card.selected').length === items.length;
+    items.forEach(function (item) { item.classList.toggle('selected', !allSelected); });
+    updateCartUI();
+  }
+
+  function cartCardPress(card, event) {
+    if (event.target.closest('.check-circle') || event.target.closest('.quantity-control')) return;
+    card.classList.add('pressed');
+    const removePressed = function () {
+      card.classList.remove('pressed');
+      document.removeEventListener('mouseup', removePressed);
+      document.removeEventListener('touchend', removePressed);
+    };
+    document.addEventListener('mouseup', removePressed);
+    document.addEventListener('touchend', removePressed);
+  }
+
+  function cartCardClick(card, event) {
+    if (event.target.closest('.check-circle') || event.target.closest('.quantity-control')) return;
+    card.classList.toggle('selected');
+    updateCartUI();
+  }
+
+  function cartCheckPress(checkElement, event) {
+    event.stopPropagation();
+    checkElement.classList.add('pressed');
+    const removePressed = function () {
+      checkElement.classList.remove('pressed');
+      document.removeEventListener('mouseup', removePressed);
+      document.removeEventListener('touchend', removePressed);
+    };
+    document.addEventListener('mouseup', removePressed);
+    document.addEventListener('touchend', removePressed);
+  }
+
+  function cartCheckClick(checkElement, event) {
+    event.stopPropagation();
+    const card = checkElement.closest('.item-card');
+    setTimeout(function () {
+      card.classList.toggle('selected');
+      updateCartUI();
+    }, 100);
+  }
+
+  let qtyAnimating = false;
+
+  function cartChangeQty(btn, delta) {
+    if (qtyAnimating) return;
+
+    const control = btn.closest('.quantity-control');
+    const valueWrap = control.querySelector('.qty-value');
+    const currentDigit = valueWrap.querySelector('.qty-digit');
+    const currentValue = parseInt(currentDigit.textContent, 10);
+    const nextValue = Math.max(1, currentValue + delta);
+    if (nextValue === currentValue) return;
+
+    qtyAnimating = true;
+    const goingUp = delta > 0;
+
+    currentDigit.classList.add(goingUp ? 'slide-up' : 'slide-down');
+
+    const nextDigit = document.createElement('span');
+    nextDigit.className = 'qty-digit ' + (goingUp ? 'enter-up' : 'enter-down');
+    nextDigit.textContent = nextValue;
+    valueWrap.appendChild(nextDigit);
+
+    setTimeout(function () {
+      if (currentDigit.parentNode) currentDigit.remove();
+      nextDigit.className = 'qty-digit';
+      nextDigit.style.transform = '';
+      nextDigit.style.opacity = '';
+      qtyAnimating = false;
+      updateCartUI();
+    }, 200);
+  }
+
+  bindScroll(itemsList, cartCapsuleWrapper, 'cart');
+
+  /* ============================================================
+     MY SHOP
+     ============================================================ */
+  function openShopScreen() {
+    profileScreen.classList.remove('visible');
+    shopScreen.classList.add('visible');
+    shopScrollContainer.scrollTop = 0;
+    shopHeaderSection.classList.remove('collapsed');
+
+    setTimeout(function () {
+      placeSlider(shopCapsule, shopCapsule.querySelector('.shop-tab-item.active'), shopActiveBg);
+    }, 60);
+  }
+
+  function closeShopScreen() {
+    shopScreen.classList.remove('visible');
+    profileScreen.classList.add('visible');
+    profileScroll.scrollTop = 0;
+  }
+
+  function setShopCategory(element) {
+    shopTabs.forEach(function (t) { t.classList.remove('active'); });
+    element.classList.add('active');
+
+    const capsuleRect = shopCapsule.getBoundingClientRect();
+    const tabRect = element.getBoundingClientRect();
+    shopActiveBg.style.left = (tabRect.left - capsuleRect.left + shopCapsule.scrollLeft) + 'px';
+    shopActiveBg.style.width = tabRect.width + 'px';
+
+    shopCapsule.scrollTo({
+      left: (element.offsetLeft + element.offsetWidth / 2) - shopCapsule.offsetWidth / 2,
+      behavior: 'smooth'
+    });
+  }
+
+  shopScrollContainer.addEventListener('scroll', function () {
+    if (shopScrollContainer.scrollTop > 50) {
+      shopHeaderSection.classList.add('collapsed');
+    } else {
+      shopHeaderSection.classList.remove('collapsed');
+    }
+  }, { passive: true });
+
+  /* ============================================================
+     ПЕРЕВОРОТ КАРТОЧЕК
+     ============================================================ */
+  function flipCard(button) {
+    const card = button.closest('.gift-card');
+    if (card) card.classList.toggle('flipped');
+  }
+
+  /* ============================================================
+     ИНИЦИАЛИЗАЦИЯ
+     ============================================================ */
+  placeSlider(capsule, capsule.querySelector('.tab-item.active'), activeBg);
+  lastFavesTab = favesTabsRow.querySelector('.tab-item.active');
+  updateFavesUI();
+  updateCartUI();
+
+  backdrop.style.transition = 'none';
+  backdrop.style.transform = 'translateX(' + backdropOffset(homeItem) + 'px)';
+  void backdrop.offsetHeight;
+  backdrop.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s ease, background-color 0.3s ease';
+
+  function syncOnResize() {
+    if (!isProfileActive) {
+      const activeNav = document.querySelector('.nav-item-new.active');
+      if (activeNav) moveBackdrop(activeNav, false);
+    }
+    if (currentTab === 'home') {
+      placeSlider(capsule, capsule.querySelector('.tab-item.active'), activeBg);
+    }
+    if (currentTab === 'faves') {
+      initFavesSlider();
+      syncDeleteWidth();
+    }
+    if (currentTab === 'cart') {
+      initCartSlider();
+    }
+    if (currentTab === 'chats') {
+      placeSlider(chatsCapsule, chatsCapsule.querySelector('.tab-item.active'), chatsActiveBg);
+    }
+  }
+
+  window.addEventListener('resize', syncOnResize);
+
+  if (window.ResizeObserver) {
+    const observer = new ResizeObserver(syncOnResize);
+    observer.observe(navbar);
+  }
+
+  /* ============================================================
+     ЭКСПОРТ В GLOBAL
+     ============================================================ */
+  window.flipCard = flipCard;
+  window.setActiveCategory = setActiveCategory;
+  window.setChatCategory = setChatCategory;
+  window.setCartCategory = setCartCategory;
+  window.setActiveProfile = setActiveProfile;
+  window.closeProfile = closeProfile;
+  window.openShopScreen = openShopScreen;
+  window.closeShopScreen = closeShopScreen;
+  window.setShopCategory = setShopCategory;
+  window.favesToggleAll = favesToggleAll;
+  window.favesCheckPress = favesCheckPress;
+  window.favesCheckClick = favesCheckClick;
+  window.cartToggleAll = cartToggleAll;
+  window.cartCardPress = cartCardPress;
+  window.cartCardClick = cartCardClick;
+  window.cartCheckPress = cartCheckPress;
+  window.cartCheckClick = cartCheckClick;
+  window.cartChangeQty = cartChangeQty;
+
+})();
+</script>
+</body>
+</html>
